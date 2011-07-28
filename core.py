@@ -235,9 +235,10 @@ class PaymentMethod(object):
 
             self.populated = True
 
-            return bool(self.errors)
+            return not bool(self.errors)
 
     def update(self):
+        return 
         out_data = {}
 
         # populate this dict with my data that's changed. or, if not fetched, just any data that's been set
@@ -247,7 +248,7 @@ class PaymentMethod(object):
             # conversions only need to happen here. so we need to know the datatypes ahead of time here.
         # etc
         if self._last_data.get('custom', None) != self.custom and self.custom != None: # the None would be if they hadn't fetched yet
-            out_data['custom'] = tojson(self.custom)
+            out_data['custom'] = json.dumps(self.custom)
 
         in_data = _request("http://update_payment_method_url", data)
         # in_data is going to be the payment method. I don't know why they would send it again. Should we save it again?
@@ -653,6 +654,74 @@ if __name__ == '__main__':
 
         def test_update(self):
             payment_method_token = new_payment_method_token()
+            payment_method = PaymentMethod(feefighters = self.feefighters, payment_method_token = payment_method_token, do_fetch = False)
+            payment_method_check = PaymentMethod(feefighters = self.feefighters, payment_method_token = payment_method_token)
+
+            expected_before = {
+                "payment_method_token": payment_method_token,
+
+# may not want to bother testing for these, will have to spend time testing for approximate time
+#                "created_at", 
+#                "updated_at", 
+
+                "custom": {'a':'b', 'c':{'d':'e'}},
+                "is_retained": False,
+                "is_redacted": False, 
+                "is_sensitive_data_valid":True,
+                "errors":[], 
+                "info":[], #{'context':'gateway.transaction', 'key':'success', 'source':'samurai'}], 
+                "last_four_digits":"0000",
+                "card_type": "Visa", 
+                "first_name": "Nobody", 
+                "last_name": "Fakerson", 
+                "expiry_month": 1, 
+                "expiry_year": 2012, 
+                "address_1": "123 Fake Street",
+                "address_2": "", # None, 
+                "city": "Chicago", 
+                "state": "IL",
+                "zip": "60611", 
+                "country": ""
+            }
+
+            expected_after = {
+                "payment_method_token": payment_method_token,
+
+# may not want to bother testing for these, will have to spend time testing for approximate time
+#                "created_at", 
+#                "updated_at", 
+
+                "custom": {'x':'y', 'z':['a', 'b', 'c']},
+                "is_retained": False,
+                "is_redacted": False, 
+                "is_sensitive_data_valid":True,
+                "errors":[], 
+                "info":[], #{'context':'gateway.transaction', 'key':'success', 'source':'samurai'}], 
+                "last_four_digits":"0000",
+                "card_type": "Mastercard", 
+                "first_name": "Nobody", 
+                "last_name": "Fakerson", 
+                "expiry_month": 1, 
+                "expiry_year": 2018, 
+                "address_1": "123 Fake Street",
+                "address_2": "", # None, 
+                "city": "Chicago", 
+                "state": "IL",
+                "zip": "60611", 
+                "country": ""
+            }
+
+            payment_method.card_type = "Mastercard"
+            payment_method.expiry_date = 2018
+            payment_method.custom = {'x':'y', 'z':['a', 'b', 'c']}
+
+            for attr_name, var_val in expected_before.iteritems():
+                self.assertEqual(getattr(payment_method_check, attr_name), var_val)
+
+            payment_method.update()
+
+            for attr_name, var_val in expected_after.iteritems():
+                self.assertEqual(getattr(payment_method_check, attr_name), var_val)
 
 
         def test_redact(self):

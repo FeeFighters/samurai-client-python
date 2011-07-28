@@ -88,7 +88,6 @@ def _xml_outer_node_to_dict(xml_node):
 
     return { xml_node.tagName: out_data }
 
-# check eladmin/utils/highrise.py
 class RequestWithPut(urllib2.Request):
     use_put_method = False
     def get_method(self):

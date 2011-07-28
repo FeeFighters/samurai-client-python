@@ -163,6 +163,12 @@ class PaymentMethod(object):
 
     _last_data = None
 
+    field_names = ["created_at", "updated_at", "is_retained", "is_redacted", "is_sensitive_data_valid", "errors", "info", 
+        "last_four_digits", "card_type", "first_name", "last_name", "expiry_month", "expiry_year", "address_1", "address_2",
+        "city", "state",  "zip", "country", "custom"]
+
+    updatable_field_names = [name for name in field_names if name not in ['custom', 'created_at', 'updated_at', 'errors', 'info']]
+
     def __init__(self, *args, **kwargs):
         
         if 'feefighters' in kwargs:
@@ -184,15 +190,11 @@ class PaymentMethod(object):
         self.errors = []
         self.info = []
 
-    def _basic_payment_method_request(self, request):
+    def _basic_payment_method_request(self, request, payload = {}):
         "This is a basic method with no payload, and should update the payment_method data in the object's attributes"
 
         request = REQUESTS[request]
-        in_data = _request( request[0], request[1] % self.payment_method_token, self._merchant_key, self._merchant_password)
-
-        attr_names = ["created_at", "updated_at", "is_retained", "is_redacted", "is_sensitive_data_valid", "errors", "info", 
-            "last_four_digits", "card_type", "first_name", "last_name", "expiry_month", "expiry_year", "address_1", "address_2",
-            "city", "state",  "zip", "country"]
+        in_data = _request( request[0], request[1] % self.payment_method_token, self._merchant_key, self._merchant_password, payload)
 
         self.errors = self.info = []
 
@@ -202,7 +204,7 @@ class PaymentMethod(object):
 
         # check if we have all expected fields. if not, assum the whole thing is a wash.
         elif "payment_method" in in_data: # if this is a response with <error> as the head element, we won't expect these fields
-            for field in attr_names:
+            for field in self.field_names:
                 if field not in in_data['payment_method']:
                     in_data = {'error': {'errors':[{'source': 'library', 'context': 'library', 'key': 'missing_fields'}], 'info':[]}}
                     break
@@ -220,10 +222,10 @@ class PaymentMethod(object):
 
         # handle <payment_method> responses
         else:
-            for attr_name in attr_names:
+            for attr_name in self.field_names:
                 setattr(self, attr_name, in_data['payment_method'][attr_name])
 
-            if in_data['payment_method']['custom'] in ["", None]:
+            if in_data['payment_method']['custom'] == "":
                 in_data['payment_method']['custom'] = "{}"
 
             try:
@@ -238,20 +240,20 @@ class PaymentMethod(object):
             return not bool(self.errors)
 
     def update(self):
-        return 
-        out_data = {}
+        out_data = {'payment_method':{}}
 
-        # populate this dict with my data that's changed. or, if not fetched, just any data that's been set
-        if self._last_data.get('updated_at', None) != self.updated_at and self.updated_at != None: # the None would be if they hadn't fetched yet
-            out_data['updated_at'] = self.updated_at
-            # consider data types in the opposite direction here. shouldn't really put that in _request, because those
-            # conversions only need to happen here. so we need to know the datatypes ahead of time here.
-        # etc
-        if self._last_data.get('custom', None) != self.custom and self.custom != None: # the None would be if they hadn't fetched yet
-            out_data['custom'] = json.dumps(self.custom)
+        for attr_name in self.updatable_field_names:
+            # the None would be if they hadn't fetched yet
+            if self._last_data.get(attr_name, None) != getattr(self, attr_name) and getattr(self, attr_name) != None:
+                out_data['payment_method'][attr_name] = getattr(self, attr_name)
 
-        in_data = _request("http://update_payment_method_url", data)
-        # in_data is going to be the payment method. I don't know why they would send it again. Should we save it again?
+        if self.custom != None and ('custom' not in self._last_data or json.loads(self._last_data['custom']) != self.custom):
+            try:
+                out_data['payment_method']['custom'] = json.dumps(self.custom)
+            except:
+                return {"error":{"errors":[{"context": "library", "source": "library", "key": "json_encoding_error" }], "info":[]}}
+
+        return self._basic_payment_method_request("update_payment_method", out_data)
         
     def fetch(self):
         return self._basic_payment_method_request("fetch_payment_method")
@@ -698,7 +700,7 @@ if __name__ == '__main__':
             }
 
             payment_method.card_type = "Mastercard"
-            payment_method.expiry_date = 2018
+            payment_method.expiry_year = 2018
             payment_method.custom = {'x':'y', 'z':['a', 'b', 'c']}
 
             for attr_name, var_val in expected_before.iteritems():
@@ -706,9 +708,13 @@ if __name__ == '__main__':
 
             payment_method.update()
 
+            payment_method_check.fetch()
+
             for attr_name, var_val in expected_after.iteritems():
                 self.assertEqual(getattr(payment_method_check, attr_name), var_val)
 
+        def test_update_after_fetch(self):
+            pass
 
         def test_redact(self):
             payment_method_token = new_payment_method_token()

@@ -713,8 +713,39 @@ if __name__ == '__main__':
             for attr_name, var_val in expected_after.iteritems():
                 self.assertEqual(getattr(payment_method_check, attr_name), var_val)
 
-        def test_update_after_fetch(self):
-            pass
+        def test_update_before_or_after_fetch(self):
+            "Tests that you can update items in a PaymentMethod before or after a fetch. Those are handled slightly differently."
+
+            # update before fetch first
+            payment_method_token = new_payment_method_token()
+            payment_method = PaymentMethod(feefighters = self.feefighters, payment_method_token = payment_method_token, do_fetch = False)
+            payment_method_check = PaymentMethod(feefighters = self.feefighters, payment_method_token = payment_method_token, do_fetch = False)
+
+            payment_method.expiry_year = 2020
+            payment_method.custom = {'a':'b'} # handled somewhat differently, better test it
+
+            payment_method.update()
+            payment_method_check.fetch()
+
+            self.assertEquals(payment_method_check.expiry_year, 2020)
+            self.assertEquals(payment_method_check.custom, {'a':'b'})
+
+            # update after fetch next
+            payment_method_token = new_payment_method_token()
+            payment_method = PaymentMethod(feefighters = self.feefighters, payment_method_token = payment_method_token, do_fetch = False)
+            payment_method_check = PaymentMethod(feefighters = self.feefighters, payment_method_token = payment_method_token, do_fetch = False)
+
+            payment_method.fetch()
+
+            payment_method.expiry_year = 2020
+            payment_method.custom = {'a':'b'} # handled somewhat differently, better test it
+
+            payment_method.update()
+            payment_method_check.fetch()
+
+            self.assertEquals(payment_method_check.expiry_year, 2020)
+            self.assertEquals(payment_method_check.custom, {'a':'b'})
+
 
         def test_redact(self):
             payment_method_token = new_payment_method_token()

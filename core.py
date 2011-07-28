@@ -99,7 +99,8 @@ class RequestWithPut(urllib2.Request):
 
 def _request(method, url, username, password, out_data={}):
     """
-        Takes an input dictionary, sends as XML payload to the supplied URL with the given method.
+        Takes an input dictionary. For PUT, sends as XML payload to the supplied URL with the given method.
+        For POST, sends as POST variables.
         Returns XML result as dictionary, accounting for FeeFighters' conventions, setting datatypes
 
         Raises/Returns error in case of HTTPS error, <error> outer tag returned
@@ -119,7 +120,8 @@ def _request(method, url, username, password, out_data={}):
         elif method == "PUT":
             req.use_put_method = True
             req.add_header('Content-Type', 'application/xml')
-            handle = urllib2.urlopen(req, out_data)
+            payload = _dict_to_xml(out_data)
+            handle = urllib2.urlopen(req, payload)
 
         in_data = handle.read()
         handle.close()
@@ -523,12 +525,11 @@ if __name__ == '__main__':
             "Test a PUT method"
             request = REQUESTS["update_payment_method"]
 
-            payload_dict = { 'payment_method': {
+            payload = { 'payment_method': {
                'last_name': "Actualperson",
                'address_1': "321 Real Street",
                'expiry_year': 2018,
             }}
-            payload = _dict_to_xml(payload_dict)
 
             payment_method_token = new_payment_method_token()
 

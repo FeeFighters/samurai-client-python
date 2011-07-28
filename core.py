@@ -115,8 +115,11 @@ def _request(method, url, username, password, out_data={}):
         if method == "GET":
             handle = urllib2.urlopen(req)
         elif method == "POST":
-            params = urllib.urlencode( out_data )
-            handle = urllib2.urlopen(req, params)
+            if (out_data):
+                payload = _dict_to_xml(out_data)
+            else:
+                payload = ""
+            handle = urllib2.urlopen(req, payload)
         elif method == "PUT":
             req.use_put_method = True
             req.add_header('Content-Type', 'application/xml')
@@ -550,7 +553,7 @@ if __name__ == '__main__':
             self.assertEqual(response['payment_method']['first_name'], "Nobody")
 
     
-    class TestMethods(unittest.TestCase):
+    class TestPaymentMethodMethods(unittest.TestCase):
         "testing the actual outward facing methods of the classes"
 
         def setUp(self):
@@ -801,6 +804,10 @@ if __name__ == '__main__':
 
             self.assertFalse(payment_method.populated)
             self.assertEquals(payment_method.errors, [{'source':'library', 'context':'library', 'key': 'bad_response'}])
+
+    class TestTransactionMethods(unittest.TestCase):
+        def test_purchase(self):
+            pass
 
 
 

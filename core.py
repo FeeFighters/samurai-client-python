@@ -268,13 +268,15 @@ class PaymentMethod(object):
 
 class Transaction(object):
 
-    def __init__(self, init_arg, fetch = True):
-        if isinstance(payment_method, PaymentMethod):   # create a new transaction
-            self.payment_method = init_arg
-        else:                                           # pull up info for an existing transaction
-            self.transaction_token = init_arg
-            if fetch:
+    def __init__(self, transaction_token = None, payment_method = None, do_fetch = True):
+        if transaction_token == payment_method == None:
+            raise ValueError("Must supply either transaction_token a payment_method")
+        if transaction_token:   # pull up info for an existing transaction
+            self.transaction_token = transaction_token 
+            if do_fetch:
                 self.fetch()
+        else:                   # create a new transaction                              
+            self.payment_method = payment_method
 
     def fetch():
         pass

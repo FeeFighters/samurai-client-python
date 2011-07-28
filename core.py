@@ -114,16 +114,14 @@ def _request(method, url, username, password, out_data={}):
     try:
         if method == "GET":
             handle = urllib2.urlopen(req)
-        elif method == "POST":
+        else:
+            if method == "PUT":
+                req.use_put_method = True
+                req.add_header('Content-Type', 'application/xml')
             if (out_data):
                 payload = _dict_to_xml(out_data)
             else:
                 payload = ""
-            handle = urllib2.urlopen(req, payload)
-        elif method == "PUT":
-            req.use_put_method = True
-            req.add_header('Content-Type', 'application/xml')
-            payload = _dict_to_xml(out_data)
             handle = urllib2.urlopen(req, payload)
 
         in_data = handle.read()

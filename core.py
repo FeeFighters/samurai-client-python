@@ -547,8 +547,6 @@ if __name__ == '__main__':
             self.assertEqual(response['payment_method']['expiry_month'], 1)
             self.assertEqual(response['payment_method']['first_name'], "Nobody")
 
-        # just a good and bad POST. no need for all methods
-
     
     class TestMethods(unittest.TestCase):
         "testing the actual outward facing methods of the classes"
@@ -602,11 +600,6 @@ if __name__ == '__main__':
 
             expected_after = {
                 "payment_method_token": payment_method_token,
-
-# may not want to bother testing for these, will have to spend time testing for approximate time
-#                "created_at", 
-#                "updated_at", 
-
                 "custom": {'a':'b', 'c':{'d':'e'}},
                 "is_retained": False,
                 "is_redacted": False, 
@@ -640,6 +633,9 @@ if __name__ == '__main__':
             for attr_name, var_val in expected_after.iteritems():
                 self.assertEqual(getattr(payment_method, attr_name), var_val)
 
+            self.assertEqual(type(payment_method.created_at), datetime)
+            self.assertEqual(type(payment_method.updated_at), datetime)
+
             self.assertTrue(payment_method.populated)
 
         def test_bad_fetch(self):
@@ -659,11 +655,6 @@ if __name__ == '__main__':
 
             expected_before = {
                 "payment_method_token": payment_method_token,
-
-# may not want to bother testing for these, will have to spend time testing for approximate time
-#                "created_at", 
-#                "updated_at", 
-
                 "custom": {'a':'b', 'c':{'d':'e'}},
                 "is_retained": False,
                 "is_redacted": False, 
@@ -686,11 +677,6 @@ if __name__ == '__main__':
 
             expected_after = {
                 "payment_method_token": payment_method_token,
-
-# may not want to bother testing for these, will have to spend time testing for approximate time
-#                "created_at", 
-#                "updated_at", 
-
                 "custom": {'x':'y', 'z':['a', 'b', 'c']},
                 "is_retained": False,
                 "is_redacted": False, 

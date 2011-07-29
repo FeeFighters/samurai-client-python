@@ -143,7 +143,6 @@ class FeeFighters(object):
     def __init__(self, **kwargs):
         self._merchant_key = kwargs["merchant_key"]
         self._merchant_password = kwargs["merchant_password"]
-        self._gateway_token = kwargs["gateway_token"]
 
 class RemoteObject(object):
 
@@ -248,16 +247,13 @@ class PaymentMethod(RemoteObject):
             self._load_data_from_dict(kwargs['payment_method_initial'], self.field_names + ["payment_method_token"])
             self._merchant_key = kwargs['merchant_key']
             self._merchant_password = kwargs['merchant_password']
-            self._gateway_token = kwargs['gateway_token']
         elif 'feefighters' in kwargs:
             self._merchant_key = kwargs['feefighters']._merchant_key
             self._merchant_password = kwargs['feefighters']._merchant_password
-            self._gateway_token = kwargs['feefighters']._gateway_token
             self.payment_method_token = kwargs['payment_method_token']
         else:
             self._merchant_key = kwargs['merchant_key']
             self._merchant_password = kwargs['merchant_password']
-            self._gateway_token = kwargs['gateway_token']
             self.payment_method_token = kwargs['payment_method_token']
 
         self._last_data = {}
@@ -305,7 +301,6 @@ class Transaction(RemoteObject):
     transaction_type    = None
     amount              = None
     currency_code       = None
-    gateway_token       = None
     gateway_success     = None
     payment_method      = None
 
@@ -329,11 +324,11 @@ class Transaction(RemoteObject):
         if 'feefighters' in kwargs:
             self._merchant_key = kwargs['feefighters']._merchant_key
             self._merchant_password = kwargs['feefighters']._merchant_password
-            self._gateway_token = kwargs['feefighters']._gateway_token
         else:
             self._merchant_key = kwargs['merchant_key']
             self._merchant_password = kwargs['merchant_password']
-            self._gateway_token = kwargs['gateway_token']
+
+        self.gateway_token = kwargs['gateway_token']
 
         self.errors = []
         self.info = []
@@ -361,10 +356,10 @@ class Transaction(RemoteObject):
             else:
                 out_data['transaction'][field] = "{}"
 
-        if self._remote_object_request("purchase_transaction", self._gateway_token, out_data):
+        if self._remote_object_request("purchase_transaction", self.gateway_token, out_data):
             self.transaction_type = string.lower(self.transaction_type) # so we don't get tripped up remembering "Purchase" vs "purchase"
             self.payment_method = PaymentMethod(payment_method_initial = {'payment_method':self.payment_method}, merchant_key = self._merchant_key,
-                merchant_password = self._merchant_password, gateway_token = self._gateway_token)
+                merchant_password = self._merchant_password)
             if self.payment_method.errors:
                 self.errors.append({"error":{"errors":[{"context": "client", "source": "client", "key": "errors_in_returned_payment_method" }], "info":[]}})
                 return False

@@ -264,7 +264,6 @@ class TestPaymentMethodMethods(unittest.TestCase):
 
         self.assertEqual(payment_method._merchant_key, test_credentials.merchant_key)
         self.assertEqual(payment_method._merchant_password, test_credentials.merchant_password)
-        self.assertEqual(payment_method._gateway_token, test_credentials.gateway_token)
         self.assertEqual(payment_method.payment_method_token, payment_method_token)
 
         # same thing, more verbose
@@ -276,7 +275,6 @@ class TestPaymentMethodMethods(unittest.TestCase):
 
         self.assertEqual(payment_method._merchant_key, test_credentials.merchant_key)
         self.assertEqual(payment_method._merchant_password, test_credentials.merchant_password)
-        self.assertEqual(payment_method._gateway_token, test_credentials.gateway_token)
         self.assertEqual(payment_method.payment_method_token, payment_method_token)
 
     def test_do_fetch(self):
@@ -502,7 +500,7 @@ class TestTransactionMethods(unittest.TestCase):
         payment_method = PaymentMethod(feefighters = feefighters, payment_method_token = payment_method_token, do_fetch = False)
 
         try:
-            transaction = Transaction(feefighters = feefighters, payment_method = payment_method)
+            transaction = Transaction(feefighters = feefighters, payment_method = payment_method, gateway_token = test_credentials.gateway_token)
         except:
             self.fail()
 
@@ -511,7 +509,7 @@ class TestTransactionMethods(unittest.TestCase):
         self.assertEqual(transaction.payment_method.first_name, "Nobody")
 
         try:
-            Transaction(feefighters = feefighters)
+            Transaction(feefighters = feefighters, gateway_token = test_credentials.gateway_token)
         except ValueError:
             pass
         except:
@@ -527,13 +525,13 @@ class TestTransactionMethods(unittest.TestCase):
         payment_method = PaymentMethod(feefighters = feefighters, payment_method_token = payment_method_token, do_fetch = False)
 
         try:
-            transaction = Transaction(feefighters = feefighters, payment_method = payment_method, do_fetch = False)
+            transaction = Transaction(feefighters = feefighters, payment_method = payment_method, gateway_token = test_credentials.gateway_token, do_fetch = False)
         except:
             self.fail()
 
         self.assertEqual(transaction._merchant_key, test_credentials.merchant_key)
         self.assertEqual(transaction._merchant_password, test_credentials.merchant_password)
-        self.assertEqual(transaction._gateway_token, test_credentials.gateway_token)
+        self.assertEqual(transaction.gateway_token, test_credentials.gateway_token)
 
         # same thing, more verbose
         try:
@@ -544,12 +542,12 @@ class TestTransactionMethods(unittest.TestCase):
 
         self.assertEqual(transaction._merchant_key, test_credentials.merchant_key)
         self.assertEqual(transaction._merchant_password, test_credentials.merchant_password)
-        self.assertEqual(transaction._gateway_token, test_credentials.gateway_token)
+        self.assertEqual(transaction.gateway_token, test_credentials.gateway_token)
 
     def test_purchase(self):
         payment_method_token = _new_payment_method_token()
 
-        expected_none = ["reference_id", "transaction_token", "created_at", "descriptor", "custom", "transaction_type", "amount", "currency_code", "gateway_token", "gateway_success" ]
+        expected_none = ["reference_id", "transaction_token", "created_at", "descriptor", "custom", "transaction_type", "amount", "currency_code", "gateway_success" ]
 
         expected_after = {
             "custom": {'a':'b'},
@@ -563,10 +561,10 @@ class TestTransactionMethods(unittest.TestCase):
         }
 
         payment_method = PaymentMethod(feefighters = feefighters, payment_method_token = payment_method_token, do_fetch = False)
-        transaction = Transaction(feefighters = feefighters, payment_method = payment_method)
+        transaction = Transaction(feefighters = feefighters, payment_method = payment_method, gateway_token = test_credentials.gateway_token)
 
         for attr_name in expected_none:
-            self.assertEqual(getattr(transaction, attr_name), None)
+            self.assertEqual(getattr(transaction, attr_name), None, attr_name + " not None")
 
         self.assertEqual(transaction.errors, [])
         self.assertEqual(transaction.info, [])
@@ -601,7 +599,7 @@ class TestTransactionMethods(unittest.TestCase):
     def test_bad_purchase(self):
         payment_method_token = _new_payment_method_token()
         payment_method = PaymentMethod(feefighters = feefighters, payment_method_token = payment_method_token, do_fetch = False)
-        transaction = Transaction(feefighters = feefighters, payment_method = payment_method)
+        transaction = Transaction(feefighters = feefighters, payment_method = payment_method, gateway_token = test_credentials.gateway_token)
 
         transaction.custom = {'a':'b'}
         transaction.descriptor = {'c':'d'}
@@ -614,7 +612,7 @@ class TestTransactionMethods(unittest.TestCase):
     def test_do_fetch(self):
         payment_method_token = _new_payment_method_token()
         payment_method = PaymentMethod(feefighters = feefighters, payment_method_token = payment_method_token, do_fetch = False)
-        transaction = Transaction(feefighters = feefighters, payment_method = payment_method)
+        transaction = Transaction(feefighters = feefighters, payment_method = payment_method, gateway_token = test_credentials.gateway_token)
 
         transaction.custom = {'a':'b'}
         transaction.descriptor = {'c':'d'}

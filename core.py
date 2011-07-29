@@ -130,6 +130,7 @@ def _request(method, url, username, password, out_data={}):
         return _xml_to_dict(in_data)
     except urllib2.HTTPError, e:
         if e.code == 404:
+            print url
             return {"error":{"errors":[{"context": "client", "source": "client", "key": "response_404" }], "info":[]}}
         if e.code == 500:
             return {"error":{"errors":[{"context": "client", "source": "client", "key": "response_500" }], "info":[]}}
@@ -146,14 +147,14 @@ class FeeFighters(object):
 
 class RemoteObject(object):
 
-    def _remote_object_request(self, request_name, url_token, payload = {}, field_names = None):
+    def _remote_object_request(self, request_name, url_parameter, payload = {}, field_names = None):
         "This is a method that handles all requests, and should update the object's attributes with the new data"
 
         if field_names == None:
             field_names = self.field_names
     
         request = REQUESTS[request_name]
-        in_data = _request( request[0], request[1] % url_token, self._merchant_key, self._merchant_password, payload)
+        in_data = _request( request[0], request[1] % url_parameter, self._merchant_key, self._merchant_password, payload)
 
         return self._load_data_from_dict(in_data, field_names)
 
@@ -311,15 +312,16 @@ class Transaction(RemoteObject):
     head_xml_element_name = "transaction"
 
     def __init__(self, **kwargs):
-        if kwargs.get('transaction_token', None) == kwargs.get('payment_method', None) == None:
-            raise ValueError("Must supply either a transaction_token or a payment_method")
-        if kwargs.get('transaction_token', None):   # pull up info for an existing transaction
-            self.transaction_token = kwargs.get('transaction_token', None)
+        if kwargs.get('reference_id', None) == kwargs.get('payment_method', None) == None:
+            raise ValueError("Must supply either a reference_id or a payment_method")
+        if kwargs.get('reference_id', None):   # pull up info for an existing transaction
+            self.reference_id = kwargs.get('reference_id', None)
             if kwargs.get('do_fetch', None):
                 self.fetch()
         else:                   # create a new transaction                              
             self.payment_method = kwargs.get('payment_method', None)
             self.payment_method.fetch()
+            self.gateway_token = kwargs['gateway_token'] # can be got from the transaction via fetch, if a reference_id is there
 
         if 'feefighters' in kwargs:
             self._merchant_key = kwargs['feefighters']._merchant_key
@@ -328,13 +330,11 @@ class Transaction(RemoteObject):
             self._merchant_key = kwargs['merchant_key']
             self._merchant_password = kwargs['merchant_password']
 
-        self.gateway_token = kwargs['gateway_token']
-
         self.errors = []
         self.info = []
 
     def purchase(self, amount, currency_code, billing_reference, customer_reference): # default 'USD'?
-        if self.transaction_token:
+        if self.reference_id:
             return {"error":{"errors":[{"context": "client", "source": "client", "key": "attempted_purchase_on_existing_transaction" }], "info":[]}}
 
         out_data = {'transaction':{
@@ -356,7 +356,10 @@ class Transaction(RemoteObject):
             else:
                 out_data['transaction'][field] = "{}"
 
-        if self._remote_object_request("purchase_transaction", self.gateway_token, out_data):
+        return self._transaction_request("purchase_transaction", self.gateway_token, out_data)
+
+    def _transaction_request(self, request_name, url_parameter, payload = {}, field_names = None):
+        if self._remote_object_request(request_name, url_parameter):
             self.transaction_type = string.lower(self.transaction_type) # so we don't get tripped up remembering "Purchase" vs "purchase"
             self.payment_method = PaymentMethod(payment_method_initial = {'payment_method':self.payment_method}, merchant_key = self._merchant_key,
                 merchant_password = self._merchant_password)
@@ -367,7 +370,6 @@ class Transaction(RemoteObject):
                 return True
         else:
             return False
-        
 
     def authorize(self, amount): # saves the txn id
         pass
@@ -381,5 +383,5 @@ class Transaction(RemoteObject):
     def reverse(self, amount): # aka credit. requires a txn id
         pass
 
-    def fetch():
-        pass
+    def fetch(self):
+        return self._transaction_request("fetch_transaction", self.reference_id, {},list(set(self.field_names) - set(['reference_id'])))

@@ -9,8 +9,8 @@ REQUESTS = {
     "update_payment_method":    ("PUT",     "https://samurai.feefighters.com/v1/payment_methods/%s.xml"),
     "retain_payment_method":    ("POST",    "https://samurai.feefighters.com/v1/payment_methods/%s/retain.xml"),
     "redact_payment_method":    ("POST",    "https://samurai.feefighters.com/v1/payment_methods/%s/redact.xml"),
-    "purchase_transaction":     ("POST",    "https://samurai.feefighters.com/v1/gateways/%s/purchase.xml"),
-    "authorize_transaction":    ("POST",    "https://samurai.feefighters.com/v1/gateways/%s/authorize.xml"),
+    "purchase_transaction":     ("POST",    "https://samurai.feefighters.com/v1/processors/%s/purchase.xml"),
+    "authorize_transaction":    ("POST",    "https://samurai.feefighters.com/v1/processors/%s/authorize.xml"),
     "capture_transaction":      ("POST",    "https://samurai.feefighters.com/v1/transactions/%s/capture.xml"),
     "void_transaction":         ("POST",    "https://samurai.feefighters.com/v1/transactions/%s/void.xml"),
     "reverse_transaction":      ("POST",    "https://samurai.feefighters.com/v1/transactions/%s/credit.xml"),
@@ -45,7 +45,7 @@ def _xml_outer_node_to_dict(xml_node):
 
     # from their API, we don't expect more than two levels of nodes.
     # doc_element > messages > message, or doc_element > datum 
-    # with the exceptions of gateway_response, and an embedded payment_method
+    # with the exceptions of processor_response, and an embedded payment_method
     for outer_node in (node for node in xml_node.childNodes if node.nodeType == Node.ELEMENT_NODE):
         element_type = outer_node.getAttribute('type')
         element_name = outer_node.tagName
@@ -53,19 +53,19 @@ def _xml_outer_node_to_dict(xml_node):
         if element_name == 'payment_method':
             payment_method = _xml_outer_node_to_dict(outer_node)['payment_method']
             out_data['payment_method'] = payment_method
-        elif element_name == 'gateway_response':
-            # the structure of 'gateway_response' happens to be very similar to the document at large. level 1, data. level 2, messages
+        elif element_name == 'processor_response':
+            # the structure of 'processor_response' happens to be very similar to the document at large. level 1, data. level 2, messages
             # so we'll just call this function recursively
-            gateway_response = _xml_outer_node_to_dict(outer_node)['gateway_response']
-            out_data['gateway_success'] = gateway_response.get('success', False)
-            for error in gateway_response['errors']:
-                out_data['errors'].append( dict(error , source = "gateway") ) # it's set as a "samurai" error
-            for info in gateway_response['info']:
-                out_data['info'].append( dict(info , source = "gateway") ) # it's set as a "samurai" info 
+            processor_response = _xml_outer_node_to_dict(outer_node)['processor_response']
+            out_data['processor_success'] = processor_response.get('success', False)
+            for error in processor_response['errors']:
+                out_data['errors'].append( dict(error , source = "processor") ) # it's set as a "samurai" error
+            for info in processor_response['info']:
+                out_data['info'].append( dict(info , source = "processor") ) # it's set as a "samurai" info 
         # doc_element > messages > message 
         elif element_name == 'messages':
             for message in outer_node.getElementsByTagName("message"):
-                # ({'context': context, 'key': key }, samurai/gateway)
+                # ({'context': context, 'key': key }, samurai/processor)
                 if message.getAttribute('subclass') == "error":
                     out_data['errors'].append( { 'context': message.getAttribute('context'), 'key': message.getAttribute('key'), 'source': "samurai"} )
                 if message.getAttribute('subclass') == "info":
@@ -130,7 +130,6 @@ def _request(method, url, username, password, out_data={}):
         return _xml_to_dict(in_data)
     except urllib2.HTTPError, e:
         if e.code == 404:
-            print url
             return {"error":{"errors":[{"context": "client", "source": "client", "key": "response_404" }], "info":[]}}
         if e.code == 500:
             return {"error":{"errors":[{"context": "client", "source": "client", "key": "response_500" }], "info":[]}}
@@ -302,10 +301,10 @@ class Transaction(RemoteObject):
     transaction_type    = None
     amount              = None
     currency_code       = None
-    gateway_success     = None
+    processor_success     = None
     payment_method      = None
 
-    field_names = ["reference_id", "created_at", "descriptor", "custom", "transaction_type", "amount", "currency_code", "gateway_success", "payment_method", "info", "errors", "transaction_token"]
+    field_names = ["reference_id", "created_at", "descriptor", "custom", "transaction_type", "amount", "currency_code", "processor_success", "payment_method", "info", "errors", "transaction_token"]
 
     json_field_names = ["custom", "descriptor"]
 
@@ -321,7 +320,7 @@ class Transaction(RemoteObject):
         else:                   # create a new transaction                              
             self.payment_method = kwargs.get('payment_method', None)
             self.payment_method.fetch()
-            self.gateway_token = kwargs['gateway_token'] # can be got from the transaction via fetch, if a reference_id is there
+            self.processor_token = kwargs['processor_token'] # can be got from the transaction via fetch, if a reference_id is there
 
         if 'feefighters' in kwargs:
             self._merchant_key = kwargs['feefighters']._merchant_key
@@ -356,10 +355,10 @@ class Transaction(RemoteObject):
             else:
                 out_data['transaction'][field] = "{}"
 
-        return self._transaction_request("purchase_transaction", self.gateway_token, out_data)
+        return self._transaction_request("purchase_transaction", self.processor_token, out_data)
 
     def _transaction_request(self, request_name, url_parameter, payload = {}, field_names = None):
-        if self._remote_object_request(request_name, url_parameter):
+        if self._remote_object_request(request_name, url_parameter, payload, field_names):
             self.transaction_type = string.lower(self.transaction_type) # so we don't get tripped up remembering "Purchase" vs "purchase"
             self.payment_method = PaymentMethod(payment_method_initial = {'payment_method':self.payment_method}, merchant_key = self._merchant_key,
                 merchant_password = self._merchant_password)

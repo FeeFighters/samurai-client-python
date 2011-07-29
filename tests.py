@@ -98,43 +98,43 @@ class TestXMLTODict():#unittest.TestCase):
         in_str = """
         <doc>
             <messages type='array'>
-                <message subclass="error" context="gateway.avs" key="country_not_supported" />
+                <message subclass="error" context="processor.avs" key="country_not_supported" />
                 <message subclass="error" context="input.cvv" key="too_short" />
-                <message subclass="info" context="gateway.transaction" key="success" />
+                <message subclass="info" context="processor.transaction" key="success" />
             </messages>
         </doc>
         """
         out_dict = _xml_to_dict(in_str)
         expected = {'doc': {
            'errors': [
-                {'context':'gateway.avs', 'key':'country_not_supported', 'source': "samurai"},
+                {'context':'processor.avs', 'key':'country_not_supported', 'source': "samurai"},
                 {'context':'input.cvv', 'key':'too_short', 'source': "samurai"}, 
             ],
            'info': [
-                {'context':'gateway.transaction', 'key':'success', 'source':"samurai"},
+                {'context':'processor.transaction', 'key':'success', 'source':"samurai"},
             ]
         }}
 
         self.assertEqual(out_dict, expected )
 
-    def test_gateway_response(self):
+    def test_processor_response(self):
         in_str = """
         <doc>
-            <gateway_response>
+            <processor_response>
                 <success type="boolean">false</success>
                 <messages type="array">
-                    <message subclass="error" context="gateway.avs" key="country_not_supported" />
+                    <message subclass="error" context="processor.avs" key="country_not_supported" />
                     <message subclass="error" context="input.cvv" key="too_short" />
                 </messages>
-            </gateway_response>
+            </processor_response>
         </doc>
         """
         out_dict = _xml_to_dict(in_str)
         expected = {'doc': {
-           'gateway_success': False,
+           'processor_success': False,
            'errors': [
-                {'context':'gateway.avs', 'key':'country_not_supported','source': "gateway"},
-                {'context':'input.cvv', 'key':'too_short','source': "gateway"}, 
+                {'context':'processor.avs', 'key':'country_not_supported','source': "processor"},
+                {'context':'input.cvv', 'key':'too_short','source': "processor"}, 
             ],
            'info': []
         }}
@@ -145,7 +145,7 @@ class TestXMLTODict():#unittest.TestCase):
         in_str = """
         <doc>
             <messages>
-                <message subclass="error" context="gateway.avs" key="country_not_supported" />
+                <message subclass="error" context="processor.avs" key="country_not_supported" />
             </messages>
             <payment_method>
                 <blah type="boolean">false</blah>
@@ -165,7 +165,7 @@ class TestXMLTODict():#unittest.TestCase):
                'info': []
             },
            'errors': [
-                {'context':'gateway.avs', 'key':'country_not_supported', 'source': "samurai"},
+                {'context':'processor.avs', 'key':'country_not_supported', 'source': "samurai"},
             ],
            'info': []
         }}
@@ -247,7 +247,7 @@ class TestBasicRequest():#unittest.TestCase):
 
 
 feefighters = FeeFighters(merchant_key = test_credentials.merchant_key, merchant_password = test_credentials.merchant_password,
-    gateway_token = test_credentials.gateway_token)
+    processor_token = test_credentials.processor_token)
 
 class TestPaymentMethodMethods():#unittest.TestCase):
     "testing the actual outward facing methods of the classes"
@@ -269,7 +269,7 @@ class TestPaymentMethodMethods():#unittest.TestCase):
         # same thing, more verbose
         try:
             payment_method = PaymentMethod(merchant_key = test_credentials.merchant_key, merchant_password = test_credentials.merchant_password,
-                gateway_token = test_credentials.gateway_token, payment_method_token = payment_method_token, do_fetch = False)
+                processor_token = test_credentials.processor_token, payment_method_token = payment_method_token, do_fetch = False)
         except:
             self.fail()
 
@@ -298,7 +298,7 @@ class TestPaymentMethodMethods():#unittest.TestCase):
             "is_redacted": False, 
             "is_sensitive_data_valid":True,
             "errors":[], 
-            "info":[], #{'context':'gateway.transaction', 'key':'success', 'source':'samurai'}], 
+            "info":[], #{'context':'processor.transaction', 'key':'success', 'source':'samurai'}], 
             "last_four_digits":"2222",
             "card_type": "Visa", 
             "first_name": "Nobody", 
@@ -353,7 +353,7 @@ class TestPaymentMethodMethods():#unittest.TestCase):
             "is_redacted": False, 
             "is_sensitive_data_valid":True,
             "errors":[], 
-            "info":[], #{'context':'gateway.transaction', 'key':'success', 'source':'samurai'}], 
+            "info":[], #{'context':'processor.transaction', 'key':'success', 'source':'samurai'}], 
             "last_four_digits":"2222",
             "card_type": "Visa", 
             "first_name": "Nobody", 
@@ -375,7 +375,7 @@ class TestPaymentMethodMethods():#unittest.TestCase):
             "is_redacted": False, 
             "is_sensitive_data_valid":True,
             "errors":[], 
-            "info":[], #{'context':'gateway.transaction', 'key':'success', 'source':'samurai'}], 
+            "info":[], #{'context':'processor.transaction', 'key':'success', 'source':'samurai'}], 
             "last_four_digits":"2222",
             "card_type": "Mastercard", 
             "first_name": "Nobody", 
@@ -500,7 +500,7 @@ class TestTransactionMethods(unittest.TestCase):
         payment_method = PaymentMethod(feefighters = feefighters, payment_method_token = payment_method_token, do_fetch = False)
 
         try:
-            transaction = Transaction(feefighters = feefighters, payment_method = payment_method, gateway_token = test_credentials.gateway_token, do_fetch = False)
+            transaction = Transaction(feefighters = feefighters, payment_method = payment_method, processor_token = test_credentials.processor_token, do_fetch = False)
         except:
             self.fail()
 
@@ -509,7 +509,7 @@ class TestTransactionMethods(unittest.TestCase):
         self.assertEqual(transaction.payment_method.first_name, "Nobody")
 
         try:
-            Transaction(feefighters = feefighters, gateway_token = test_credentials.gateway_token, do_fetch = False)
+            Transaction(feefighters = feefighters, processor_token = test_credentials.processor_token, do_fetch = False)
         except ValueError:
             pass
         except:
@@ -525,29 +525,29 @@ class TestTransactionMethods(unittest.TestCase):
         payment_method = PaymentMethod(feefighters = feefighters, payment_method_token = payment_method_token, do_fetch = False)
 
         try:
-            transaction = Transaction(feefighters = feefighters, payment_method = payment_method, gateway_token = test_credentials.gateway_token, do_fetch = False)
+            transaction = Transaction(feefighters = feefighters, payment_method = payment_method, processor_token = test_credentials.processor_token, do_fetch = False)
         except:
             self.fail()
 
         self.assertEqual(transaction._merchant_key, test_credentials.merchant_key)
         self.assertEqual(transaction._merchant_password, test_credentials.merchant_password)
-        self.assertEqual(transaction.gateway_token, test_credentials.gateway_token)
+        self.assertEqual(transaction.processor_token, test_credentials.processor_token)
 
         # same thing, more verbose
         try:
             transaction = Transaction(merchant_key = test_credentials.merchant_key, merchant_password = test_credentials.merchant_password,
-                gateway_token = test_credentials.gateway_token, payment_method = payment_method, do_fetch = False)
+                processor_token = test_credentials.processor_token, payment_method = payment_method, do_fetch = False)
         except:
             self.fail()
 
         self.assertEqual(transaction._merchant_key, test_credentials.merchant_key)
         self.assertEqual(transaction._merchant_password, test_credentials.merchant_password)
-        self.assertEqual(transaction.gateway_token, test_credentials.gateway_token)
+        self.assertEqual(transaction.processor_token, test_credentials.processor_token)
 
     def d_test_purchase(self):
         payment_method_token = _new_payment_method_token()
 
-        expected_none = ["reference_id", "transaction_token", "created_at", "descriptor", "custom", "transaction_type", "amount", "currency_code", "gateway_success" ]
+        expected_none = ["reference_id", "transaction_token", "created_at", "descriptor", "custom", "transaction_type", "amount", "currency_code", "processor_success" ]
 
         expected_after = {
             "custom": {'a':'b'},
@@ -555,13 +555,13 @@ class TestTransactionMethods(unittest.TestCase):
             "transaction_type":"purchase",
             "amount":"20.5",
             "currency_code":"USD",
-#            "gateway_token":test_credentials.gateway_token, # why would we even get this back? I'd rather not update it, it shouldn't change.
-            "gateway_success": True,
+#            "processor_token":test_credentials.processor_token, # why would we even get this back? I'd rather not update it, it shouldn't change.
+            "processor_success": True,
             "errors":[],
         }
 
         payment_method = PaymentMethod(feefighters = feefighters, payment_method_token = payment_method_token, do_fetch = False)
-        transaction = Transaction(feefighters = feefighters, payment_method = payment_method, gateway_token = test_credentials.gateway_token, do_fetch= False)
+        transaction = Transaction(feefighters = feefighters, payment_method = payment_method, processor_token = test_credentials.processor_token, do_fetch= False)
 
         for attr_name in expected_none:
             self.assertEqual(getattr(transaction, attr_name), None, attr_name + " not None")
@@ -581,7 +581,7 @@ class TestTransactionMethods(unittest.TestCase):
         for attr_name, var_val in expected_after.iteritems():
             self.assertEqual(getattr(transaction, attr_name), var_val)
 
-        self.assertTrue({'source':'gateway', 'context':'gateway.transaction', 'key':'success'} in transaction.info)
+        self.assertTrue({'source':'processor', 'context':'processor.transaction', 'key':'success'} in transaction.info)
 
         # harder-to-test-for attributes
         self.assertEqual(type(transaction.created_at), datetime)
@@ -599,7 +599,7 @@ class TestTransactionMethods(unittest.TestCase):
     def d_test_bad_purchase(self):
         payment_method_token = _new_payment_method_token()
         payment_method = PaymentMethod(feefighters = feefighters, payment_method_token = payment_method_token, do_fetch = False)
-        transaction = Transaction(feefighters = feefighters, payment_method = payment_method, gateway_token = test_credentials.gateway_token, do_fetch= False)
+        transaction = Transaction(feefighters = feefighters, payment_method = payment_method, processor_token = test_credentials.processor_token, do_fetch= False)
 
         transaction.custom = {'a':'b'}
         transaction.descriptor = {'c':'d'}
@@ -613,7 +613,7 @@ class TestTransactionMethods(unittest.TestCase):
         payment_method_token = _new_payment_method_token()
 
         payment_method = PaymentMethod(feefighters = feefighters, payment_method_token = payment_method_token, do_fetch = False)
-        transaction = Transaction(feefighters = feefighters, payment_method = payment_method, gateway_token = test_credentials.gateway_token, do_fetch= False)
+        transaction = Transaction(feefighters = feefighters, payment_method = payment_method, processor_token = test_credentials.processor_token, do_fetch= False)
 
         transaction.custom = {'a':'b'}
         transaction.descriptor = {'c':'d'}

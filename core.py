@@ -130,9 +130,9 @@ def _request(method, url, username, password, out_data={}):
         return _xml_to_dict(in_data)
     except urllib2.HTTPError, e:
         if e.code == 404:
-            return {"error":{"errors":[{"context": "client", "source": "client", "key": "error_404" }], "info":[]}}
+            return {"error":{"errors":[{"context": "client", "source": "client", "key": "response_404" }], "info":[]}}
         if e.code == 500:
-            return {"error":{"errors":[{"context": "client", "source": "client", "key": "error_500" }], "info":[]}}
+            return {"error":{"errors":[{"context": "client", "source": "client", "key": "response_500" }], "info":[]}}
     except:
         return {"error":{"errors":[{"context": "client", "source": "client", "key": "unknown_response_error" }], "info":[]}}
     
@@ -145,9 +145,62 @@ class FeeFighters(object):
         self._merchant_password = kwargs["merchant_password"]
         self._gateway_token = kwargs["gateway_token"]
 
-class PaymentMethod(object):
+class RemoteObject(object):
 
-    payment_method_token = None
+    def _remote_object_request(self, request, url_token, payload = {}):
+        "This is a method that handles all requests, and should update the object's attributes with the new data"
+
+        request = REQUESTS[request]
+        in_data = _request( request[0], request[1] % url_token, self._merchant_key, self._merchant_password, payload)
+
+        self.errors = self.info = []
+
+        # check if the head element is what we expect
+        if "error" not in in_data and self.head_xml_element_name not in in_data:
+            in_data = {'error': {'errors':[{'source': 'client', 'context': 'client', 'key': 'wrong_head_element'}], 'info':[]}}
+
+        # check if we have all expected fields. if not, assum the whole thing is a wash.
+        elif self.head_xml_element_name in in_data: # if this is a response with <error> as the head element, we won't expect these fields
+            for field in self.field_names:
+                if field not in in_data[self.head_xml_element_name]:
+                    in_data = {'error': {'errors':[{'source': 'client', 'context': 'client', 'key': 'missing_fields'}], 'info':[]}}
+                    break
+
+        # handle <error> responses
+        if "error" in in_data:
+            self.errors = in_data['error']['errors']
+            self.info = in_data['error']['info']
+
+            self._last_data = None
+
+            self.populated = False
+
+            return False
+
+        # handle responses with the expected head element
+        else:
+            for attr_name in self.field_names:
+                setattr(self, attr_name, in_data[self.head_xml_element_name][attr_name])
+
+            for field in self.json_field_names:
+                if in_data[self.head_xml_element_name]['custom'] == "":
+                    in_data[self.head_xml_element_name]['custom'] = "{}"
+
+                try:
+                    self.custom = json.loads(in_data[self.head_xml_element_name]['custom'])
+                except:
+                    self.errors.append({'source': 'client', 'context': 'client', 'key':'json_decoding_error'}  )
+
+            self._last_data = in_data[self.head_xml_element_name] # so we know what changed, for update()
+
+            self.populated = True
+
+            return not bool(self.errors)
+
+
+class PaymentMethod(RemoteObject):
+
+    token = None
     created_at = None
     updated_at = None
     custom = None
@@ -173,7 +226,11 @@ class PaymentMethod(object):
         "last_four_digits", "card_type", "first_name", "last_name", "expiry_month", "expiry_year", "address_1", "address_2",
         "city", "state",  "zip", "country", "custom"]
 
+    json_field_names = ["custom"]
+
     updatable_field_names = [name for name in field_names if name not in ['custom', 'created_at', 'updated_at', 'errors', 'info']]
+
+    head_xml_element_name = "payment_method"
 
     def __init__(self, *args, **kwargs):
         
@@ -181,13 +238,12 @@ class PaymentMethod(object):
             self._merchant_key = kwargs['feefighters']._merchant_key
             self._merchant_password = kwargs['feefighters']._merchant_password
             self._gateway_token = kwargs['feefighters']._gateway_token
-            self.payment_method_token = kwargs['payment_method_token']
         else:
             self._merchant_key = kwargs['merchant_key']
             self._merchant_password = kwargs['merchant_password']
             self._gateway_token = kwargs['gateway_token']
-            self.payment_method_token = kwargs['payment_method_token']
 
+        self.token = kwargs['token']
         self._last_data = {}
         self.populated = False
         if kwargs.get("do_fetch", True):
@@ -195,55 +251,6 @@ class PaymentMethod(object):
 
         self.errors = []
         self.info = []
-
-    def _basic_payment_method_request(self, request, payload = {}):
-        "This is a basic method with no payload, and should update the payment_method data in the object's attributes"
-
-        request = REQUESTS[request]
-        in_data = _request( request[0], request[1] % self.payment_method_token, self._merchant_key, self._merchant_password, payload)
-
-        self.errors = self.info = []
-
-        # check if the head element is what we expect
-        if "error" not in in_data and "payment_method" not in in_data:
-            in_data = {'error': {'errors':[{'source': 'library', 'context': 'library', 'key': 'wrong_head_element'}], 'info':[]}}
-
-        # check if we have all expected fields. if not, assum the whole thing is a wash.
-        elif "payment_method" in in_data: # if this is a response with <error> as the head element, we won't expect these fields
-            for field in self.field_names:
-                if field not in in_data['payment_method']:
-                    in_data = {'error': {'errors':[{'source': 'library', 'context': 'library', 'key': 'missing_fields'}], 'info':[]}}
-                    break
-
-        # handle <error> responses
-        if "error" in in_data:
-            self.errors = in_data['error']['errors']
-            self.info = in_data['error']['info']
-
-            self._last_data = None
-
-            self.populated = False
-
-            return False
-
-        # handle <payment_method> responses
-        else:
-            for attr_name in self.field_names:
-                setattr(self, attr_name, in_data['payment_method'][attr_name])
-
-            if in_data['payment_method']['custom'] == "":
-                in_data['payment_method']['custom'] = "{}"
-
-            try:
-                self.custom = json.loads(in_data['payment_method']['custom'])
-            except:
-                self.errors.append({'source': 'library', 'context': 'library', 'key':'json_decoding_error'}  )
-
-            self._last_data = in_data['payment_method'] # so we know what changed, for update()
-
-            self.populated = True
-
-            return not bool(self.errors)
 
     def update(self):
         out_data = {'payment_method':{}}
@@ -257,44 +264,85 @@ class PaymentMethod(object):
             try:
                 out_data['payment_method']['custom'] = json.dumps(self.custom)
             except:
-                return {"error":{"errors":[{"context": "library", "source": "library", "key": "json_encoding_error" }], "info":[]}}
+                return {"error":{"errors":[{"context": "client", "source": "client", "key": "json_encoding_error" }], "info":[]}}
 
-        return self._basic_payment_method_request("update_payment_method", out_data)
+        return self._remote_object_request("update_payment_method", self.token, out_data)
         
     def fetch(self):
-        return self._basic_payment_method_request("fetch_payment_method")
+        return self._remote_object_request("fetch_payment_method", self.token)
 
     def retain(self):
-        return self._basic_payment_method_request("retain_payment_method")
+        return self._remote_object_request("retain_payment_method", self.token)
 
     def redact(self):
-        return self._basic_payment_method_request("redact_payment_method")
+        return self._remote_object_request("redact_payment_method", self.token)
 
 
-class Transaction(object):
+class Transaction(RemoteObject):
 
-    def __init__(self, transaction_token = None, payment_method = None, do_fetch = True):
-        if transaction_token == payment_method == None:
-            raise ValueError("Must supply either transaction_token a payment_method")
-        if transaction_token:   # pull up info for an existing transaction
-            self.transaction_token = transaction_token 
-            if do_fetch:
+    reference_id        = None
+    token   = None
+    created_at          = None
+    descriptor          = None
+    custom              = None
+    transaction_type    = None
+    amount              = None
+    currency_code       = None
+    gateway_token       = None
+    gateway_success     = None
+    payment_method      = None
+
+    field_names =  []
+    json_field_names = ["custom", "descriptor"]
+
+    head_xml_element_name = "transaction"
+
+    def __init__(self, **kwargs):
+        if kwargs.get('token', None) == kwargs.get('payment_method', None) == None:
+            raise ValueError("Must supply either a token or a payment_method")
+        if kwargs.get('token', None):   # pull up info for an existing transaction
+            self.token = kwargs.get('token', None)
+            if kwargs.get('do_fetch', None):
                 self.fetch()
         else:                   # create a new transaction                              
-            self.payment_method = payment_method
+            self.payment_method = kwargs.get('payment_method', None)
+            self.payment_method.fetch()
 
-    def fetch():
-        pass
-
-    def purchase(self, amount, currency_code, billing_reference, customer_reference, ): # default 'USD'?
-        if self.transaction_token:
-            raise AlreadyPurchasedSomething
-
-        in_data = _request('http://purchase_url', {'amount': str(amount), 'currency_code': currency_code})
-        if in_data['gateway_response']['success']:
-            return True
+        if 'feefighters' in kwargs:
+            self._merchant_key = kwargs['feefighters']._merchant_key
+            self._merchant_password = kwargs['feefighters']._merchant_password
+            self._gateway_token = kwargs['feefighters']._gateway_token
         else:
-            return False
+            self._merchant_key = kwargs['merchant_key']
+            self._merchant_password = kwargs['merchant_password']
+            self._gateway_token = kwargs['gateway_token']
+
+        self.errors = []
+        self.info = []
+
+    def purchase(self, amount, currency_code, billing_reference, customer_reference): # default 'USD'?
+        if self.token:
+            return {"error":{"errors":[{"context": "client", "source": "client", "key": "attempted_purchase_on_existing_transaction" }], "info":[]}}
+
+        out_data = {'transaction':{
+            'type':'purchase',
+            'amount': str(amount),
+            'currency_code': currency_code,
+            'payment_method_token': self.payment_method.token,
+            'billing_reference':billing_reference,
+            'customer_reference':customer_reference,
+        }}
+
+        for field in ['custom', 'descriptor']:
+            if getattr(self, field) != None:
+                try:
+                    out_data['transaction'][field] = json.dumps(getattr(self, field))
+                except:
+                    return {"error":{"errors":[{"context": "client", "source": "client", "key": "json_encoding_error" }], "info":[]}}
+            else:
+                out_data['transaction'][field] = "{}"
+
+        return self._remote_object_request("purchase_transaction", self._gateway_token)
 
     def authorize(self, amount): # saves the txn id
         pass
@@ -308,3 +356,5 @@ class Transaction(object):
     def reverse(self, amount): # aka credit. requires a txn id
         pass
 
+    def fetch():
+        pass

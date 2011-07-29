@@ -128,8 +128,13 @@ def _request(method, url, username, password, out_data={}):
         handle.close()
 
         return _xml_to_dict(in_data)
+    except urllib2.HTTPError, e:
+        if e.code == 404:
+            return {"error":{"errors":[{"context": "client", "source": "client", "key": "error_404" }], "info":[]}}
+        if e.code == 500:
+            return {"error":{"errors":[{"context": "client", "source": "client", "key": "error_500" }], "info":[]}}
     except:
-        return {"error":{"errors":[{"context": "library", "source": "library", "key": "bad_response" }], "info":[]}}
+        return {"error":{"errors":[{"context": "client", "source": "client", "key": "unknown_response_error" }], "info":[]}}
     
 
 class FeeFighters(object):

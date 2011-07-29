@@ -313,14 +313,6 @@ class Transaction(RemoteObject):
     def __init__(self, **kwargs):
         if kwargs.get('reference_id', None) == kwargs.get('payment_method', None) == None:
             raise ValueError("Must supply either a reference_id or a payment_method")
-        if kwargs.get('reference_id', None):   # pull up info for an existing transaction
-            self.reference_id = kwargs.get('reference_id', None)
-            if kwargs.get('do_fetch', None):
-                self.fetch()
-        else:                   # create a new transaction                              
-            self.payment_method = kwargs.get('payment_method', None)
-            self.payment_method.fetch()
-            self.processor_token = kwargs['processor_token'] # can be got from the transaction via fetch, if a reference_id is there
 
         if 'feefighters' in kwargs:
             self._merchant_key = kwargs['feefighters']._merchant_key
@@ -328,6 +320,15 @@ class Transaction(RemoteObject):
         else:
             self._merchant_key = kwargs['merchant_key']
             self._merchant_password = kwargs['merchant_password']
+
+        if kwargs.get('reference_id', None):   # pull up info for an existing transaction
+            self.reference_id = kwargs.get('reference_id', None)
+            if kwargs.get('do_fetch', True):
+                self.fetch()
+        else:                   # create a new transaction                              
+            self.payment_method = kwargs.get('payment_method', None)
+            self.payment_method.fetch()
+            self.processor_token = kwargs['processor_token'] # can be got from the transaction via fetch, if a reference_id is there
 
         self.errors = []
         self.info = []

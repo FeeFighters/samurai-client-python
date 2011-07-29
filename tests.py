@@ -517,7 +517,6 @@ class TestTransactionMethods(unittest.TestCase):
         else:
             self.fail()
 
-
     def d_test_make_transaction_credentials(self):
         # with FeeFighters object
 
@@ -610,7 +609,7 @@ class TestTransactionMethods(unittest.TestCase):
 
         self.assertTrue(bool(transaction.errors))
         
-    def d_test_do_fetch(self):
+    def d_test_fetch(self):
         payment_method_token = _new_payment_method_token()
 
         payment_method = PaymentMethod(feefighters = feefighters, payment_method_token = payment_method_token, do_fetch = False)
@@ -642,9 +641,29 @@ class TestTransactionMethods(unittest.TestCase):
         for field_name in set(Transaction.field_names) - set(['errors', 'info', 'payment_method']):
             self.assertEqual(getattr(transaction_test, field_name), getattr(transaction, field_name)),
 
-    def test_make_transaction_with_token(self):
-        pass # fail if both are passed
+    def test_do_fetch(self):
+        payment_method_token = _new_payment_method_token()
+        payment_method = PaymentMethod(feefighters = feefighters, payment_method_token = payment_method_token)
+        transaction = Transaction(feefighters = feefighters, payment_method = payment_method, processor_token = test_credentials.processor_token)
 
+        # Need unique values to prevent duplicate transaction errors
+        billing_reference = "b" + str(int(time.time()))
+        customer_reference = "c" + str(int(time.time()))
+
+        self.assertTrue(transaction.purchase(20.5, "USD", billing_reference, customer_reference), transaction.errors)
+
+        transaction_1 = Transaction(feefighters = feefighters, reference_id = transaction.reference_id)
+        self.assertEqual(transaction_1.amount, "20.5")
+        transaction_2 = Transaction(feefighters = feefighters, reference_id = transaction.reference_id, do_fetch=False)
+        self.assertEqual(transaction_2.amount, None)
+
+
+
+    def test_use_unfetched_payment_method(self):
+        pass
+        # create, purchase, fetch, void
+        # create, authorize, capture, reverse
+        
 
 
 unittest.main()

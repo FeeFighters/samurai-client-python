@@ -98,9 +98,9 @@ class TestXMLTODict(unittest.TestCase):
         in_str = """
         <doc>
             <messages type='array'>
-                <message class="error" context="gateway.avs" key="country_not_supported" />
-                <message class="error" context="input.cvv" key="too_short" />
-                <message class="info" context="gateway.transaction" key="success" />
+                <message subclass="error" context="gateway.avs" key="country_not_supported" />
+                <message subclass="error" context="input.cvv" key="too_short" />
+                <message subclass="info" context="gateway.transaction" key="success" />
             </messages>
         </doc>
         """
@@ -123,8 +123,8 @@ class TestXMLTODict(unittest.TestCase):
             <gateway_response>
                 <success type="boolean">false</success>
                 <messages type="array">
-                    <message class="error" context="gateway.avs" key="country_not_supported" />
-                    <message class="error" context="input.cvv" key="too_short" />
+                    <message subclass="error" context="gateway.avs" key="country_not_supported" />
+                    <message subclass="error" context="input.cvv" key="too_short" />
                 </messages>
             </gateway_response>
         </doc>
@@ -145,12 +145,12 @@ class TestXMLTODict(unittest.TestCase):
         in_str = """
         <doc>
             <messages>
-                <message class="error" context="gateway.avs" key="country_not_supported" />
+                <message subclass="error" context="gateway.avs" key="country_not_supported" />
             </messages>
             <payment_method>
                 <blah type="boolean">false</blah>
                 <messages type="array">
-                    <message class="error" context="input.cvv" key="too_short" />
+                    <message subclass="error" context="input.cvv" key="too_short" />
                 </messages>
             </payment_method>
         </doc>
@@ -265,7 +265,7 @@ class TestPaymentMethodMethods(unittest.TestCase):
         self.assertEqual(payment_method._merchant_key, test_credentials.merchant_key)
         self.assertEqual(payment_method._merchant_password, test_credentials.merchant_password)
         self.assertEqual(payment_method._gateway_token, test_credentials.gateway_token)
-        self.assertEqual(payment_method.token, payment_method_token)
+        self.assertEqual(payment_method.payment_method_token, payment_method_token)
 
         # same thing, more verbose
         try:
@@ -301,7 +301,7 @@ class TestPaymentMethodMethods(unittest.TestCase):
             "is_sensitive_data_valid":True,
             "errors":[], 
             "info":[], #{'context':'gateway.transaction', 'key':'success', 'source':'samurai'}], 
-            "last_four_digits":"0000",
+            "last_four_digits":"2222",
             "card_type": "Visa", 
             "first_name": "Nobody", 
             "last_name": "Fakerson", 
@@ -356,7 +356,7 @@ class TestPaymentMethodMethods(unittest.TestCase):
             "is_sensitive_data_valid":True,
             "errors":[], 
             "info":[], #{'context':'gateway.transaction', 'key':'success', 'source':'samurai'}], 
-            "last_four_digits":"0000",
+            "last_four_digits":"2222",
             "card_type": "Visa", 
             "first_name": "Nobody", 
             "last_name": "Fakerson", 
@@ -378,7 +378,7 @@ class TestPaymentMethodMethods(unittest.TestCase):
             "is_sensitive_data_valid":True,
             "errors":[], 
             "info":[], #{'context':'gateway.transaction', 'key':'success', 'source':'samurai'}], 
-            "last_four_digits":"0000",
+            "last_four_digits":"2222",
             "card_type": "Mastercard", 
             "first_name": "Nobody", 
             "last_name": "Fakerson", 
@@ -607,9 +607,9 @@ class TestTransactionMethods(unittest.TestCase):
         transaction.descriptor = {'c':'d'}
         transaction.payment_method.payment_method_token = "bad_token" # just to throw a wrench in the works
 
-        assertEqual(transaction.purchase(20.5, "USD", "12345", "321"), False)
+        self.assertEqual(transaction.purchase(20.5, "USD", "12345", "321"), False)
 
-        assertTrue(bool(transaction.errors))
+        self.assertTrue(bool(transaction.errors))
         
     def test_do_fetch(self):
         payment_method_token = _new_payment_method_token()
@@ -620,7 +620,7 @@ class TestTransactionMethods(unittest.TestCase):
         transaction.descriptor = {'c':'d'}
         transaction.payment_method.payment_method_token = "bad_token" # just to throw a wrench in the works
 
-        transaction_test = Transaction(feefighters = feefighters, transaction_token = transaction.token)
+        transaction_test = Transaction(feefighters = feefighters, transaction_token = transaction.transaction_token)
 
         for field_name in Transaction.field_names:
             self.assertEqual(getattr(transaction, field_name), getattr(transaction_test, field_name))

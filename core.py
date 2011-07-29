@@ -1,4 +1,4 @@
-import urllib, urllib2, urlparse, base64, json
+import urllib, urllib2, urlparse, base64, json, string
 from datetime import datetime
 
 from xml.dom.minidom import parseString as parseStringToXML, Node, Document
@@ -57,7 +57,7 @@ def _xml_outer_node_to_dict(xml_node):
             # the structure of 'gateway_response' happens to be very similar to the document at large. level 1, data. level 2, messages
             # so we'll just call this function recursively
             gateway_response = _xml_outer_node_to_dict(outer_node)['gateway_response']
-            out_data['gateway_success'] = gateway_response['success']
+            out_data['gateway_success'] = gateway_response.get('success', False)
             for error in gateway_response['errors']:
                 out_data['errors'].append( dict(error , source = "gateway") ) # it's set as a "samurai" error
             for info in gateway_response['info']:
@@ -66,9 +66,9 @@ def _xml_outer_node_to_dict(xml_node):
         elif element_name == 'messages':
             for message in outer_node.getElementsByTagName("message"):
                 # ({'context': context, 'key': key }, samurai/gateway)
-                if message.getAttribute('class') == "error":
+                if message.getAttribute('subclass') == "error":
                     out_data['errors'].append( { 'context': message.getAttribute('context'), 'key': message.getAttribute('key'), 'source': "samurai"} )
-                if message.getAttribute('class') == "info":
+                if message.getAttribute('subclass') == "info":
                     out_data['info'].append( { 'context': message.getAttribute('context'), 'key': message.getAttribute('key'), 'source': "samurai"} )
 
         # doc_element > datum 
@@ -147,11 +147,18 @@ class FeeFighters(object):
 
 class RemoteObject(object):
 
-    def _remote_object_request(self, request, url_token, payload = {}):
+    def _remote_object_request(self, request_name, url_token, payload = {}, field_names = None):
         "This is a method that handles all requests, and should update the object's attributes with the new data"
 
-        request = REQUESTS[request]
+        if field_names == None:
+            field_names = self.field_names
+    
+        request = REQUESTS[request_name]
         in_data = _request( request[0], request[1] % url_token, self._merchant_key, self._merchant_password, payload)
+
+        return self._load_data_from_dict(in_data, field_names)
+
+    def _load_data_from_dict(self, in_data, field_names): 
 
         self.errors = self.info = []
 
@@ -161,7 +168,7 @@ class RemoteObject(object):
 
         # check if we have all expected fields. if not, assum the whole thing is a wash.
         elif self.head_xml_element_name in in_data: # if this is a response with <error> as the head element, we won't expect these fields
-            for field in self.field_names:
+            for field in field_names:
                 if field not in in_data[self.head_xml_element_name]:
                     in_data = {'error': {'errors':[{'source': 'client', 'context': 'client', 'key': 'missing_fields'}], 'info':[]}}
                     break
@@ -179,15 +186,15 @@ class RemoteObject(object):
 
         # handle responses with the expected head element
         else:
-            for attr_name in self.field_names:
-                setattr(self, attr_name, in_data[self.head_xml_element_name][attr_name])
+            for field in field_names:
+                setattr(self, field, in_data[self.head_xml_element_name][field])
 
             for field in self.json_field_names:
-                if in_data[self.head_xml_element_name]['custom'] == "":
-                    in_data[self.head_xml_element_name]['custom'] = "{}"
+                if in_data[self.head_xml_element_name][field] == "":
+                    in_data[self.head_xml_element_name][field] = "{}"
 
                 try:
-                    self.custom = json.loads(in_data[self.head_xml_element_name]['custom'])
+                    setattr(self, field, json.loads(in_data[self.head_xml_element_name][field]))
                 except:
                     self.errors.append({'source': 'client', 'context': 'client', 'key':'json_decoding_error'}  )
 
@@ -200,7 +207,7 @@ class RemoteObject(object):
 
 class PaymentMethod(RemoteObject):
 
-    token = None
+    payment_method_token = None
     created_at = None
     updated_at = None
     custom = None
@@ -233,17 +240,26 @@ class PaymentMethod(RemoteObject):
     head_xml_element_name = "payment_method"
 
     def __init__(self, *args, **kwargs):
+        if 'feefighters' in kwargs and 'payment_method_initial' in kwargs:
+            raise ValueError("Can't supply both feefighters and payment_method_initial")
         
-        if 'feefighters' in kwargs:
+        if 'payment_method_initial' in kwargs:
+            # we want to grab the token here, since this payment method will probably be coming back from a transaction
+            self._load_data_from_dict(kwargs['payment_method_initial'], self.field_names + ["payment_method_token"])
+            self._merchant_key = kwargs['merchant_key']
+            self._merchant_password = kwargs['merchant_password']
+            self._gateway_token = kwargs['gateway_token']
+        elif 'feefighters' in kwargs:
             self._merchant_key = kwargs['feefighters']._merchant_key
             self._merchant_password = kwargs['feefighters']._merchant_password
             self._gateway_token = kwargs['feefighters']._gateway_token
+            self.payment_method_token = kwargs['payment_method_token']
         else:
             self._merchant_key = kwargs['merchant_key']
             self._merchant_password = kwargs['merchant_password']
             self._gateway_token = kwargs['gateway_token']
+            self.payment_method_token = kwargs['payment_method_token']
 
-        self.token = kwargs['token']
         self._last_data = {}
         self.populated = False
         if kwargs.get("do_fetch", True):
@@ -264,24 +280,25 @@ class PaymentMethod(RemoteObject):
             try:
                 out_data['payment_method']['custom'] = json.dumps(self.custom)
             except:
-                return {"error":{"errors":[{"context": "client", "source": "client", "key": "json_encoding_error" }], "info":[]}}
+                self.errors.append({"error":{"errors":[{"context": "client", "source": "client", "key": "json_encoding_error" }], "info":[]}})
+                return False
 
-        return self._remote_object_request("update_payment_method", self.token, out_data)
+        return self._remote_object_request("update_payment_method", self.payment_method_token, out_data)
         
     def fetch(self):
-        return self._remote_object_request("fetch_payment_method", self.token)
+        return self._remote_object_request("fetch_payment_method", self.payment_method_token)
 
     def retain(self):
-        return self._remote_object_request("retain_payment_method", self.token)
+        return self._remote_object_request("retain_payment_method", self.payment_method_token)
 
     def redact(self):
-        return self._remote_object_request("redact_payment_method", self.token)
+        return self._remote_object_request("redact_payment_method", self.payment_method_token)
 
 
 class Transaction(RemoteObject):
 
     reference_id        = None
-    token   = None
+    transaction_token   = None
     created_at          = None
     descriptor          = None
     custom              = None
@@ -292,16 +309,17 @@ class Transaction(RemoteObject):
     gateway_success     = None
     payment_method      = None
 
-    field_names =  []
+    field_names = ["reference_id", "created_at", "descriptor", "custom", "transaction_type", "amount", "currency_code", "gateway_success", "payment_method", "info", "errors", "transaction_token"]
+
     json_field_names = ["custom", "descriptor"]
 
     head_xml_element_name = "transaction"
 
     def __init__(self, **kwargs):
-        if kwargs.get('token', None) == kwargs.get('payment_method', None) == None:
-            raise ValueError("Must supply either a token or a payment_method")
-        if kwargs.get('token', None):   # pull up info for an existing transaction
-            self.token = kwargs.get('token', None)
+        if kwargs.get('transaction_token', None) == kwargs.get('payment_method', None) == None:
+            raise ValueError("Must supply either a transaction_token or a payment_method")
+        if kwargs.get('transaction_token', None):   # pull up info for an existing transaction
+            self.transaction_token = kwargs.get('transaction_token', None)
             if kwargs.get('do_fetch', None):
                 self.fetch()
         else:                   # create a new transaction                              
@@ -321,14 +339,14 @@ class Transaction(RemoteObject):
         self.info = []
 
     def purchase(self, amount, currency_code, billing_reference, customer_reference): # default 'USD'?
-        if self.token:
+        if self.transaction_token:
             return {"error":{"errors":[{"context": "client", "source": "client", "key": "attempted_purchase_on_existing_transaction" }], "info":[]}}
 
         out_data = {'transaction':{
             'type':'purchase',
             'amount': str(amount),
             'currency_code': currency_code,
-            'payment_method_token': self.payment_method.token,
+            'payment_method_token': self.payment_method.payment_method_token,
             'billing_reference':billing_reference,
             'customer_reference':customer_reference,
         }}
@@ -338,11 +356,23 @@ class Transaction(RemoteObject):
                 try:
                     out_data['transaction'][field] = json.dumps(getattr(self, field))
                 except:
-                    return {"error":{"errors":[{"context": "client", "source": "client", "key": "json_encoding_error" }], "info":[]}}
+                    self.errors.append({"error":{"errors":[{"context": "client", "source": "client", "key": "json_encoding_error" }], "info":[]}})
+                    return False
             else:
                 out_data['transaction'][field] = "{}"
 
-        return self._remote_object_request("purchase_transaction", self._gateway_token)
+        if self._remote_object_request("purchase_transaction", self._gateway_token, out_data):
+            self.transaction_type = string.lower(self.transaction_type) # so we don't get tripped up remembering "Purchase" vs "purchase"
+            self.payment_method = PaymentMethod(payment_method_initial = {'payment_method':self.payment_method}, merchant_key = self._merchant_key,
+                merchant_password = self._merchant_password, gateway_token = self._gateway_token)
+            if self.payment_method.errors:
+                self.errors.append({"error":{"errors":[{"context": "client", "source": "client", "key": "errors_in_returned_payment_method" }], "info":[]}})
+                return False
+            else:
+                return True
+        else:
+            return False
+        
 
     def authorize(self, amount): # saves the txn id
         pass

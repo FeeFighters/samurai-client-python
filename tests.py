@@ -608,7 +608,20 @@ class TestTransactionMethods(unittest.TestCase):
         assertTrue(bool(transaction.errors))
         
     def test_do_fetch(self):
-        pass
+        payment_method_token = _new_payment_method_token()
+        payment_method = PaymentMethod(feefighters = feefighters, token = payment_method_token, do_fetch = False)
+        transaction = Transaction(feefighters = feefighters, payment_method = payment_method)
+
+        transaction.custom = {'a':'b'}
+        transaction.descriptor = {'c':'d'}
+        transaction.payment_method.token = "bad_token" # just to throw a wrench in the works
+
+        transaction_test = Transaction(feefighters = feefighters, token = transaction.token)
+
+        for field_name in Transaction.field_names:
+            self.assertEqual(getattr(transaction, field_name), getattr(transaction_test, field_name))
+                
+
 
     def test_make_transaction_with_token(self):
         pass # fail if both are passed

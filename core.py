@@ -358,6 +358,49 @@ class Transaction(RemoteObject):
 
         return self._transaction_request("purchase_transaction", self.processor_token, out_data)
 
+    def authorize(self, amount, currency_code, billing_reference, customer_reference): # default 'USD'?
+        if self.reference_id:
+            return {"error":{"errors":[{"context": "client", "source": "client", "key": "attempted_authorize_on_existing_transaction" }], "info":[]}}
+
+        out_data = {'transaction':{
+            'type':'authorize',
+            'amount': str(amount),
+            'currency_code': currency_code,
+            'payment_method_token': self.payment_method.payment_method_token,
+            'billing_reference':billing_reference,
+            'customer_reference':customer_reference,
+        }}
+
+        for field in ['custom', 'descriptor']:
+            if getattr(self, field) != None:
+                try:
+                    out_data['transaction'][field] = json.dumps(getattr(self, field))
+                except:
+                    self.errors.append({"error":{"errors":[{"context": "client", "source": "client", "key": "json_encoding_error" }], "info":[]}})
+                    return False
+            else:
+                out_data['transaction'][field] = "{}"
+
+        return self._transaction_request("authorize_transaction", self.processor_token, out_data)
+
+    def capture(self, amount): # default 'USD'?
+
+        out_data = {'transaction':{
+            'amount': str(amount),
+        }}
+
+        for field in ['custom', 'descriptor']:
+            if getattr(self, field) != None:
+                try:
+                    out_data['transaction'][field] = json.dumps(getattr(self, field))
+                except:
+                    self.errors.append({"error":{"errors":[{"context": "client", "source": "client", "key": "json_encoding_error" }], "info":[]}})
+                    return False
+            else:
+                out_data['transaction'][field] = "{}"
+
+        return self._transaction_request("capture_transaction", self.transaction_token, out_data)
+
     def _transaction_request(self, request_name, url_parameter, payload = {}, field_names = None):
         if self._remote_object_request(request_name, url_parameter, payload, field_names):
             self.transaction_type = string.lower(self.transaction_type) # so we don't get tripped up remembering "Purchase" vs "purchase"
@@ -370,12 +413,6 @@ class Transaction(RemoteObject):
                 return True
         else:
             return False
-
-    def authorize(self, amount): # saves the txn id
-        pass
-
-    def capture(self):           # requires a txn id
-        pass
 
     def void(self):              # requires a txn id
         pass

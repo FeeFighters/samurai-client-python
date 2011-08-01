@@ -658,6 +658,110 @@ class TestTransactionMethods(unittest.TestCase):
         self.assertEqual(transaction_2.amount, None)
 
 
+    def test_authorize_capture(self):
+        payment_method_token = _new_payment_method_token()
+
+        payment_method = PaymentMethod(feefighters = feefighters, payment_method_token = payment_method_token, do_fetch = False)
+        transaction = Transaction(feefighters = feefighters, payment_method = payment_method, processor_token = test_credentials.processor_token, do_fetch= False)
+
+        # basic checks
+        def check(t, t_type):
+            self.assertEqual(type(t.created_at), datetime)
+            self.assertEqual(type(t.reference_id), unicode)
+            self.assertNotEqual(t.reference_id, "")
+            self.assertEqual(type(t.transaction_token), unicode)
+            self.assertNotEqual(t.transaction_token, "")
+
+            self.assertEqual(type(t.payment_method), PaymentMethod)
+            self.assertEqual(t.payment_method.payment_method_token, payment_method_token)
+            self.assertEqual(t.payment_method.first_name, "Nobody")
+
+            self.assertTrue(t.populated)
+
+            expected_info = {'source':'processor', 'context':'gateway.transaction', 'key':'success'}
+            self.assertTrue(expected_info in transaction.info, str(expected_info) + " not in " + str(transaction.info))
+
+            self.assertEqual(t.transaction_type, t_type, t.errors)
+
+        # Need unique values to prevent duplicate transaction errors
+        billing_reference = "b" + str(int(time.time()))
+        customer_reference = "c" + str(int(time.time()))
+
+
+
+        # First, make an authorize transaction
+        self.assertTrue(transaction.authorize(20.5, "USD", billing_reference, customer_reference), transaction.errors)
+        check(transaction, "authorize")
+
+        # Now try to fetch the same transaction
+        transaction_test_1 = Transaction(feefighters = feefighters, reference_id = transaction.reference_id)
+        check(transaction_test_1, "authorize")
+
+        # Now try to capture it
+        self.assertTrue(transaction.capture(20.5))
+        check(transaction, "capture")
+
+        # Now re-fetch the first transaction
+        ref_id = transaction_test_1.reference_id
+        transaction_test_1.fetch()
+        check(transaction_test_1, "authorize") # confirm that it is still an "authorize" transaction
+        self.assertNotEqual(transaction_test_1.reference_id, transaction.reference_id) # and that the ref IDs is different from the other txn
+        self.assertEqual(ref_id, transaction_test_1.reference_id) # but hasn't changed from the fetch
+
+        # Now fetch a copy of the new transaction
+        transaction_test_2 = Transaction(feefighters = feefighters, reference_id = transaction.reference_id)
+        check(transaction_test_2, "capture") 
+        self.assertEqual(transaction_test_2.reference_id, transaction.reference_id) 
+
+    def test_authorize_capture_from_fetched(self):
+        payment_method_token = _new_payment_method_token()
+
+        payment_method = PaymentMethod(feefighters = feefighters, payment_method_token = payment_method_token, do_fetch = False)
+        transaction = Transaction(feefighters = feefighters, payment_method = payment_method, processor_token = test_credentials.processor_token, do_fetch= False)
+
+        # basic checks
+        def check(t, t_type):
+            self.assertEqual(type(t.created_at), datetime)
+            self.assertEqual(type(t.reference_id), unicode)
+            self.assertNotEqual(t.reference_id, "")
+            self.assertEqual(type(t.transaction_token), unicode)
+            self.assertNotEqual(t.transaction_token, "")
+
+            self.assertEqual(type(t.payment_method), PaymentMethod)
+            self.assertEqual(t.payment_method.payment_method_token, payment_method_token)
+            self.assertEqual(t.payment_method.first_name, "Nobody")
+
+            self.assertTrue(t.populated)
+
+            expected_info = {'source':'processor', 'context':'gateway.transaction', 'key':'success'}
+            self.assertTrue(expected_info in transaction.info, str(expected_info) + " not in " + str(transaction.info))
+
+            self.assertEqual(t.transaction_type, t_type, t.errors)
+
+        # Need unique values to prevent duplicate transaction errors
+        billing_reference = "b" + str(int(time.time()))
+        customer_reference = "c" + str(int(time.time()))
+
+
+
+        self.assertTrue(transaction.authorize(20.5, "USD", "x" + billing_reference, "x" + customer_reference), transaction.errors)
+
+        # Fetch a copy of the authorized transaction
+        transaction_to_capture = Transaction(feefighters = feefighters, reference_id = transaction.reference_id)
+
+        # Capture, confirm that the ref_id and txn_type changed during the capture
+        ref_id = transaction_to_capture.reference_id
+        check(transaction_to_capture, "authorize")
+        self.assertTrue(transaction_to_capture.capture(20.5))
+        self.assertNotEqual(ref_id, transaction_to_capture.reference_id) 
+        check(transaction_to_capture, "capture")
+
+        # Re-fetch the original transaction, make sure nothing changed
+        self.assertEqual(transaction.transaction_type, "authorize")
+        ref_id = transaction.reference_id
+        transaction.fetch()
+        self.assertEqual(transaction.transaction_type, "authorize")
+        self.assertEqual(ref_id, transaction.reference_id) 
 
     def test_use_unfetched_payment_method(self):
         pass

@@ -129,10 +129,7 @@ def _request(method, url, username, password, out_data={}):
 
         return _xml_to_dict(in_data)
     except urllib2.HTTPError, e:
-        if e.code == 404:
-            return {"error":{"errors":[{"context": "client", "source": "client", "key": "response_404" }], "info":[]}}
-        if e.code == 500:
-            return {"error":{"errors":[{"context": "client", "source": "client", "key": "response_500" }], "info":[]}}
+        return {"error":{"errors":[{"context": "client", "source": "client", "key": "http_error_response_" + str(e.code) }], "info":[]}}
     except:
         return {"error":{"errors":[{"context": "client", "source": "client", "key": "unknown_response_error" }], "info":[]}}
     
@@ -333,6 +330,33 @@ class Transaction(RemoteObject):
         self.errors = []
         self.info = []
 
+    def _transaction_request(self, request_name, url_parameter, payload = {}, field_names = None):
+        if self._remote_object_request(request_name, url_parameter, payload, field_names):
+            self.transaction_type = string.lower(self.transaction_type) # so we don't get tripped up remembering "Purchase" vs "purchase"
+            self.payment_method = PaymentMethod(payment_method_initial = {'payment_method':self.payment_method}, merchant_key = self._merchant_key,
+                merchant_password = self._merchant_password)
+            if self.payment_method.errors:
+                self.errors.append({"error":{"errors":[{"context": "client", "source": "client", "key": "errors_in_returned_payment_method" }], "info":[]}})
+                return False
+            else:
+                return True
+        else:
+            return False
+
+    def _add_json_fields(self, out_data):
+        for field in ['custom', 'descriptor']:
+            if getattr(self, field) != None:
+                try:
+                    out_data['transaction'][field] = json.dumps(getattr(self, field))
+                except:
+                    self.errors.append({"error":{"errors":[{"context": "client", "source": "client", "key": "json_encoding_error" }], "info":[]}})
+                    return False
+            else:
+                out_data['transaction'][field] = "{}"
+
+        return True
+
+
     def purchase(self, amount, currency_code, billing_reference, customer_reference): # default 'USD'?
         if self.reference_id:
             return {"error":{"errors":[{"context": "client", "source": "client", "key": "attempted_purchase_on_existing_transaction" }], "info":[]}}
@@ -346,15 +370,8 @@ class Transaction(RemoteObject):
             'customer_reference':customer_reference,
         }}
 
-        for field in ['custom', 'descriptor']:
-            if getattr(self, field) != None:
-                try:
-                    out_data['transaction'][field] = json.dumps(getattr(self, field))
-                except:
-                    self.errors.append({"error":{"errors":[{"context": "client", "source": "client", "key": "json_encoding_error" }], "info":[]}})
-                    return False
-            else:
-                out_data['transaction'][field] = "{}"
+        if not self._add_json_fields(out_data):
+            return False
 
         return self._transaction_request("purchase_transaction", self.processor_token, out_data)
 
@@ -371,15 +388,8 @@ class Transaction(RemoteObject):
             'customer_reference':customer_reference,
         }}
 
-        for field in ['custom', 'descriptor']:
-            if getattr(self, field) != None:
-                try:
-                    out_data['transaction'][field] = json.dumps(getattr(self, field))
-                except:
-                    self.errors.append({"error":{"errors":[{"context": "client", "source": "client", "key": "json_encoding_error" }], "info":[]}})
-                    return False
-            else:
-                out_data['transaction'][field] = "{}"
+        if not self._add_json_fields(out_data):
+            return False
 
         return self._transaction_request("authorize_transaction", self.processor_token, out_data)
 
@@ -389,36 +399,14 @@ class Transaction(RemoteObject):
             'amount': str(amount),
         }}
 
-        for field in ['custom', 'descriptor']:
-            if getattr(self, field) != None:
-                try:
-                    out_data['transaction'][field] = json.dumps(getattr(self, field))
-                except:
-                    self.errors.append({"error":{"errors":[{"context": "client", "source": "client", "key": "json_encoding_error" }], "info":[]}})
-                    return False
-            else:
-                out_data['transaction'][field] = "{}"
-
         return self._transaction_request("capture_transaction", self.transaction_token, out_data)
 
-    def _transaction_request(self, request_name, url_parameter, payload = {}, field_names = None):
-        if self._remote_object_request(request_name, url_parameter, payload, field_names):
-            self.transaction_type = string.lower(self.transaction_type) # so we don't get tripped up remembering "Purchase" vs "purchase"
-            self.payment_method = PaymentMethod(payment_method_initial = {'payment_method':self.payment_method}, merchant_key = self._merchant_key,
-                merchant_password = self._merchant_password)
-            if self.payment_method.errors:
-                self.errors.append({"error":{"errors":[{"context": "client", "source": "client", "key": "errors_in_returned_payment_method" }], "info":[]}})
-                return False
-            else:
-                return True
-        else:
-            return False
-
-    def void(self):              # requires a txn id
-        pass
+    def void(self):
+        return self._transaction_request("void_transaction", self.transaction_token)
 
     def reverse(self, amount): # aka credit. requires a txn id
-        pass
+        return  
+        return self._transaction_request("reverse_transaction", self.transaction_token)
 
     def fetch(self):
         return self._transaction_request("fetch_transaction", self.reference_id, {},list(set(self.field_names) - set(['reference_id'])))

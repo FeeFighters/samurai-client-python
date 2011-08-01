@@ -763,7 +763,36 @@ class TestTransactionMethods(unittest.TestCase):
         self.assertEqual(transaction.transaction_type, "authorize")
         self.assertEqual(ref_id, transaction.reference_id) 
 
-    def test_use_unfetched_payment_method(self):
+    def test_void(self):
+        payment_method_token = _new_payment_method_token()
+
+        payment_method = PaymentMethod(feefighters = feefighters, payment_method_token = payment_method_token, do_fetch = False)
+        transaction = Transaction(feefighters = feefighters, payment_method = payment_method, processor_token = test_credentials.processor_token, do_fetch= False)
+        # Need unique values to prevent duplicate transaction errors
+        billing_reference = "b" + str(int(time.time()))
+        customer_reference = "c" + str(int(time.time()))
+
+
+        self.assertTrue(transaction.purchase(20.5, "USD", billing_reference, customer_reference), transaction.errors)
+
+        self.assertEquals(transaction.transaction_type, "purchase")
+        self.assertTrue(transaction.void(), transaction.errors)
+        self.assertEquals(transaction.transaction_type, "void")
+
+        # from authorize
+
+        transaction = Transaction(feefighters = feefighters, payment_method = payment_method, processor_token = test_credentials.processor_token, do_fetch= False)
+
+        self.assertTrue(transaction.authorize(20.5, "USD", billing_reference, customer_reference), transaction.errors)
+        self.assertTrue(transaction.capture(20.5), transaction.errors)
+
+        self.assertEquals(transaction.transaction_type, "capture")
+        self.assertTrue(transaction.void(), transaction.errors)
+        self.assertEquals(transaction.transaction_type, "void")
+
+
+
+    def d_test_use_unfetched_payment_method(self):
         pass
         # create, purchase, fetch, void
         # create, authorize, capture, reverse

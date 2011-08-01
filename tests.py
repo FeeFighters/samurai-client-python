@@ -495,7 +495,7 @@ class TestPaymentMethodMethods():#unittest.TestCase):
 
 class TestTransactionMethods(unittest.TestCase):
 
-    def d_test_make_transaction_with_payment_method(self):
+    def test_make_transaction_with_payment_method(self):
         payment_method_token = _new_payment_method_token()
         payment_method = PaymentMethod(feefighters = feefighters, payment_method_token = payment_method_token, do_fetch = False)
 
@@ -517,7 +517,7 @@ class TestTransactionMethods(unittest.TestCase):
         else:
             self.fail()
 
-    def d_test_make_transaction_credentials(self):
+    def test_make_transaction_credentials(self):
         # with FeeFighters object
 
         payment_method_token = _new_payment_method_token()
@@ -543,7 +543,7 @@ class TestTransactionMethods(unittest.TestCase):
         self.assertEqual(transaction._merchant_password, test_credentials.merchant_password)
         self.assertEqual(transaction.processor_token, test_credentials.processor_token)
 
-    def d_test_purchase(self):
+    def test_purchase(self):
         payment_method_token = _new_payment_method_token()
 
         expected_none = ["reference_id", "transaction_token", "created_at", "descriptor", "custom", "transaction_type", "amount", "currency_code", "processor_success" ]
@@ -596,7 +596,7 @@ class TestTransactionMethods(unittest.TestCase):
 
         self.assertTrue(transaction.populated)
 
-    def d_test_bad_purchase(self):
+    def test_bad_purchase(self):
         payment_method_token = _new_payment_method_token()
         payment_method = PaymentMethod(feefighters = feefighters, payment_method_token = payment_method_token, do_fetch = False)
         transaction = Transaction(feefighters = feefighters, payment_method = payment_method, processor_token = test_credentials.processor_token, do_fetch= False)
@@ -609,7 +609,7 @@ class TestTransactionMethods(unittest.TestCase):
 
         self.assertTrue(bool(transaction.errors))
         
-    def d_test_fetch(self):
+    def test_fetch(self):
         payment_method_token = _new_payment_method_token()
 
         payment_method = PaymentMethod(feefighters = feefighters, payment_method_token = payment_method_token, do_fetch = False)
@@ -791,8 +791,26 @@ class TestTransactionMethods(unittest.TestCase):
         self.assertEquals(transaction.transaction_type, "void")
 
 
+    def test_reverse(self):
+        payment_method_token = _new_payment_method_token()
 
-    def d_test_use_unfetched_payment_method(self):
+        payment_method = PaymentMethod(feefighters = feefighters, payment_method_token = payment_method_token, do_fetch = False)
+        transaction = Transaction(feefighters = feefighters, payment_method = payment_method, processor_token = test_credentials.processor_token, do_fetch= False)
+        # Need unique values to prevent duplicate transaction errors
+        billing_reference = "b" + str(int(time.time()))
+        customer_reference = "c" + str(int(time.time()))
+
+
+        self.assertTrue(transaction.purchase(20.5, "USD", billing_reference, customer_reference), transaction.errors)
+
+        self.assertEquals(transaction.transaction_type, "purchase")
+        self.assertTrue(transaction.reverse(10), transaction.errors)
+        self.assertEquals(transaction.transaction_type, "credit")
+        self.assertEquals(transaction.amount, 10)
+
+
+
+    def test_use_unfetched_payment_method(self):
         pass
         # create, purchase, fetch, void
         # create, authorize, capture, reverse

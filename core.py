@@ -405,8 +405,12 @@ class Transaction(RemoteObject):
         return self._transaction_request("void_transaction", self.transaction_token)
 
     def reverse(self, amount): # aka credit. requires a txn id
-        return  
-        return self._transaction_request("reverse_transaction", self.transaction_token)
+
+        out_data = {'transaction':{
+            'amount': str(amount),
+        }}
+
+        return self._transaction_request("reverse_transaction", self.transaction_token, out_data)
 
     def fetch(self):
         return self._transaction_request("fetch_transaction", self.reference_id, {},list(set(self.field_names) - set(['reference_id'])))

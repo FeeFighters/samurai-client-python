@@ -13,7 +13,7 @@ REQUESTS = {
     "authorize_transaction":    ("POST",    "https://samurai.feefighters.com/v1/processors/%s/authorize.xml"),
     "capture_transaction":      ("POST",    "https://samurai.feefighters.com/v1/transactions/%s/capture.xml"),
     "void_transaction":         ("POST",    "https://samurai.feefighters.com/v1/transactions/%s/void.xml"),
-    "reverse_transaction":      ("POST",    "https://samurai.feefighters.com/v1/transactions/%s/credit.xml"),
+    "credit_transaction":      ("POST",    "https://samurai.feefighters.com/v1/transactions/%s/credit.xml"),
     "fetch_transaction":        ("GET",     "https://samurai.feefighters.com/v1/transactions/%s.xml"),
 }
 
@@ -394,6 +394,9 @@ class Transaction(RemoteObject):
         return self._transaction_request("authorize_transaction", self.processor_token, out_data)
 
     def capture(self, amount): # default 'USD'?
+        # in case we're rebuilding this transaction from a reference_id, and they didn't want to fetch initially
+        if self.transaction_token == None:
+            self.fetch()
 
         out_data = {'transaction':{
             'amount': str(amount),
@@ -402,15 +405,22 @@ class Transaction(RemoteObject):
         return self._transaction_request("capture_transaction", self.transaction_token, out_data)
 
     def void(self):
+        # in case we're rebuilding this transaction from a reference_id, and they didn't want to fetch initially
+        if self.transaction_token == None:
+            self.fetch()
+
         return self._transaction_request("void_transaction", self.transaction_token)
 
-    def reverse(self, amount): # aka credit. requires a txn id
+    def credit(self, amount): # aka credit. requires a txn id
+        # in case we're rebuilding this transaction from a reference_id, and they didn't want to fetch initially
+        if self.transaction_token == None:
+            self.fetch()
 
         out_data = {'transaction':{
             'amount': str(amount),
         }}
 
-        return self._transaction_request("reverse_transaction", self.transaction_token, out_data)
+        return self._transaction_request("credit_transaction", self.transaction_token, out_data)
 
     def fetch(self):
         return self._transaction_request("fetch_transaction", self.reference_id, {},list(set(self.field_names) - set(['reference_id'])))

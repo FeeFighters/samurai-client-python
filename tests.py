@@ -48,7 +48,7 @@ initial_test_data = {
 
 import unittest
 
-class TestTransparentRedirect():#unittest.TestCase):
+class TestTransparentRedirect(unittest.TestCase):
 
     def setUp(self):
         pass
@@ -70,7 +70,7 @@ class TestTransparentRedirect():#unittest.TestCase):
         self.assertEqual("www.edulender.com", redir_url)
 
 
-class TestXMLTODict():#unittest.TestCase):
+class TestXMLTODict(unittest.TestCase):
 
     def test_small_xml(self):
         in_str = "<doc><a>1</a><b>2</b></doc>"
@@ -173,7 +173,7 @@ class TestXMLTODict():#unittest.TestCase):
         self.assertEqual(out_dict, expected )
     
 
-class TestDictToXML():#unittest.TestCase):
+class TestDictToXML(unittest.TestCase):
     def test_dict_to_xml(self):
         payload = {'doc':
             {'last_name': "Fakerson", 'expiry_year': 2012}
@@ -186,7 +186,7 @@ class TestDictToXML():#unittest.TestCase):
         self.assertTrue(xml.documentElement.getElementsByTagName('last_name')[0].childNodes[0].nodeValue == "Fakerson")
         self.assertTrue(xml.documentElement.getElementsByTagName('expiry_year')[0].childNodes[0].nodeValue == "2012")
 
-class TestBasicRequest():#unittest.TestCase):
+class TestBasicRequest(unittest.TestCase):
 
     def test_fetch_payment_method_error(self):
         "Test a bad GET method"
@@ -249,7 +249,7 @@ class TestBasicRequest():#unittest.TestCase):
 feefighters = FeeFighters(merchant_key = test_credentials.merchant_key, merchant_password = test_credentials.merchant_password,
     processor_token = test_credentials.processor_token)
 
-class TestPaymentMethodMethods():#unittest.TestCase):
+class TestPaymentMethodMethods(unittest.TestCase):
     "testing the actual outward facing methods of the classes"
 
     def test_make_payment_method(self):
@@ -339,7 +339,7 @@ class TestPaymentMethodMethods():#unittest.TestCase):
         payment_method.fetch()
 
         self.assertFalse(payment_method.populated)
-        self.assertEquals(payment_method.errors, [{'source':'client', 'context':'client', 'key': 'response_404'}])
+        self.assertEquals(payment_method.errors, [{'source':'client', 'context':'client', 'key': 'http_error_response_404'}])
 
     def test_update(self):
         payment_method_token = _new_payment_method_token()
@@ -463,7 +463,7 @@ class TestPaymentMethodMethods():#unittest.TestCase):
         payment_method.redact()
 
         self.assertFalse(payment_method.populated)
-        self.assertEquals(payment_method.errors, [{'source':'client', 'context':'client', 'key': 'response_404'}])
+        self.assertEquals(payment_method.errors, [{'source':'client', 'context':'client', 'key': 'http_error_response_404'}])
 
 
     def test_retain(self):
@@ -491,7 +491,7 @@ class TestPaymentMethodMethods():#unittest.TestCase):
         payment_method.retain()
 
         self.assertFalse(payment_method.populated)
-        self.assertEquals(payment_method.errors, [{'source':'client', 'context':'client', 'key': 'response_404'}])
+        self.assertEquals(payment_method.errors, [{'source':'client', 'context':'client', 'key': 'http_error_response_404'}])
 
 class TestTransactionMethods(unittest.TestCase):
 
@@ -643,7 +643,7 @@ class TestTransactionMethods(unittest.TestCase):
 
     def test_do_fetch(self):
         payment_method_token = _new_payment_method_token()
-        payment_method = PaymentMethod(feefighters = feefighters, payment_method_token = payment_method_token)
+        payment_method = PaymentMethod(feefighters = feefighters, payment_method_token = payment_method_token, do_fetch = False)
         transaction = Transaction(feefighters = feefighters, payment_method = payment_method, processor_token = test_credentials.processor_token)
 
         # Need unique values to prevent duplicate transaction errors
@@ -791,7 +791,7 @@ class TestTransactionMethods(unittest.TestCase):
         self.assertEquals(transaction.transaction_type, "void")
 
 
-    def test_reverse(self):
+    def test_credit(self):
         payment_method_token = _new_payment_method_token()
 
         payment_method = PaymentMethod(feefighters = feefighters, payment_method_token = payment_method_token, do_fetch = False)
@@ -804,17 +804,50 @@ class TestTransactionMethods(unittest.TestCase):
         self.assertTrue(transaction.purchase(20.5, "USD", billing_reference, customer_reference), transaction.errors)
 
         self.assertEquals(transaction.transaction_type, "purchase")
-        self.assertTrue(transaction.reverse(10), transaction.errors)
+        self.assertTrue(transaction.credit(10), transaction.errors)
         self.assertEquals(transaction.transaction_type, "credit")
-        self.assertEquals(transaction.amount, 10)
+        self.assertEquals(transaction.amount, "10.0")
 
+    def test_use_unfetched_transaction(self):
+        "Trying the sequence of events with all copied transactions, without calling fetch explicitly"
 
+        payment_method_token = _new_payment_method_token()
+        payment_method = PaymentMethod(feefighters = feefighters, payment_method_token = payment_method_token, do_fetch = False)
 
-    def test_use_unfetched_payment_method(self):
-        pass
-        # create, purchase, fetch, void
-        # create, authorize, capture, reverse
-        
+        # new transaction
+        transaction = Transaction(feefighters = feefighters, payment_method = payment_method, processor_token = test_credentials.processor_token, do_fetch= False)
+        # Need unique values to prevent duplicate transaction errors
+        billing_reference = "b" + str(int(time.time()))
+        customer_reference = "c" + str(int(time.time()))
 
+        self.assertTrue(transaction.purchase(20.5, "USD", billing_reference, customer_reference), transaction.errors)
+
+        # copy ref_id, don't fetch, void
+        transaction = Transaction(feefighters = feefighters, reference_id=transaction.reference_id, do_fetch= False)
+        self.assertTrue(transaction.void(), transaction.errors)
+        self.assertEqual(transaction.transaction_type, "void")
+
+        ###
+        # another sequence
+        ###
+
+        # new transaction
+        transaction = Transaction(feefighters = feefighters, payment_method = payment_method, processor_token = test_credentials.processor_token, do_fetch= False)
+        # Need unique values to prevent duplicate transaction errors
+        billing_reference = "b" + str(int(time.time()))
+        customer_reference = "c" + str(int(time.time()))
+
+        # authorize
+        self.assertTrue(transaction.authorize(20.5, "USD", billing_reference, customer_reference), transaction.errors)
+
+        # copy ref_id, don't fetch, capture
+        transaction = Transaction(feefighters = feefighters, reference_id=transaction.reference_id, do_fetch= False)
+        self.assertTrue(transaction.capture(20.5), transaction.errors)
+        self.assertEqual(transaction.transaction_type, "capture")
+
+        # copy ref_id, don't fetch, credit 
+        transaction = Transaction(feefighters = feefighters, reference_id=transaction.reference_id, do_fetch= False)
+        self.assertTrue(transaction.credit(10), transaction.errors)
+        self.assertEqual(transaction.transaction_type, "credit")
 
 unittest.main()

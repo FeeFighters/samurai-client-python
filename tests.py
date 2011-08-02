@@ -289,7 +289,9 @@ class TestPaymentMethodMethods(unittest.TestCase):
         payment_method_token = _new_payment_method_token()
 
         # token left out, that one should never be None
-        expected_none = ["created_at", "updated_at", "custom", "is_retained", "is_redacted", "is_sensitive_data_valid", "last_four_digits", "card_type", "first_name", "last_name", "expiry_month", "expiry_year", "address_1", "address_2", "city", "state",  "zip", "country"]
+        expected_none = ["created_at", "updated_at", "is_retained", "is_redacted", "is_sensitive_data_valid",
+                         "last_four_digits", "card_type", "first_name", "last_name", "expiry_month", "expiry_year",
+                         "address_1", "address_2", "city", "state",  "zip", "country"]
 
         expected_after = {
             "payment_method_token": payment_method_token,
@@ -320,6 +322,7 @@ class TestPaymentMethodMethods(unittest.TestCase):
 
         self.assertEqual(payment_method.errors, [])
         self.assertEqual(payment_method.info, [])
+        self.assertEqual(payment_method.custom, {})
 
         payment_method.fetch()
 
@@ -546,7 +549,7 @@ class TestTransactionMethods(unittest.TestCase):
     def test_purchase(self):
         payment_method_token = _new_payment_method_token()
 
-        expected_none = ["reference_id", "transaction_token", "created_at", "descriptor", "custom", "transaction_type", "amount", "currency_code", "processor_success" ]
+        expected_none = ["reference_id", "transaction_token", "created_at", "transaction_type", "amount", "currency_code", "processor_success" ]
 
         expected_after = {
             "custom": {'a':'b'},
@@ -564,6 +567,9 @@ class TestTransactionMethods(unittest.TestCase):
 
         for attr_name in expected_none:
             self.assertEqual(getattr(transaction, attr_name), None, attr_name + " not None")
+
+        self.assertEqual(transaction.descriptor, {})
+        self.assertEqual(transaction.custom, {})
 
         self.assertEqual(transaction.errors, [])
         self.assertEqual(transaction.info, [])
@@ -626,12 +632,14 @@ class TestTransactionMethods(unittest.TestCase):
 
         transaction_test = Transaction(feefighters = feefighters, reference_id = transaction.reference_id, do_fetch= False)
 
-        for field_name in set(Transaction.field_names) - set(['info', 'errors', 'reference_id']):
-            self.assertEqual(getattr(transaction_test, field_name), None, field_name + " not None")
+        for field_name in set(Transaction.field_names) - set(['info', 'errors', 'reference_id', 'descriptor', 'custom']):
+            self.assertEqual(getattr(transaction_test, field_name), None, field_name + " not None: " + str(getattr(transaction_test, field_name)))
 
-        self.assertEqual(getattr(transaction_test, field_name), None, field_name + " not None")
+        self.assertEqual(transaction_test.descriptor, {})
+        self.assertEqual(transaction_test.custom, {})
 
         self.assertTrue(transaction_test.fetch(), transaction_test.errors)
+
         self.assertEquals(transaction_test.errors, [])
         self.assertEquals(transaction_test.payment_method.payment_method_token, transaction.payment_method.payment_method_token)
         self.assertEquals(transaction_test.payment_method.first_name, transaction.payment_method.first_name)

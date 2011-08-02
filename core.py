@@ -138,8 +138,8 @@ class FeeFighters(object):
     "If you want to create multiple payment methods without repeating yourself with the authentication info, you can use this"
 
     def __init__(self, **kwargs):
-        self._merchant_key = kwargs["merchant_key"]
-        self._merchant_password = kwargs["merchant_password"]
+        self.merchant_key = kwargs["merchant_key"]
+        self.merchant_password = kwargs["merchant_password"]
 
 class RemoteObject(object):
 
@@ -245,8 +245,8 @@ class PaymentMethod(RemoteObject):
             self._merchant_key = kwargs['merchant_key']
             self._merchant_password = kwargs['merchant_password']
         elif 'feefighters' in kwargs:
-            self._merchant_key = kwargs['feefighters']._merchant_key
-            self._merchant_password = kwargs['feefighters']._merchant_password
+            self._merchant_key = kwargs['feefighters'].merchant_key
+            self._merchant_password = kwargs['feefighters'].merchant_password
             self.payment_method_token = kwargs['payment_method_token']
         else:
             self._merchant_key = kwargs['merchant_key']
@@ -312,8 +312,8 @@ class Transaction(RemoteObject):
             raise ValueError("Must supply either a reference_id or a payment_method")
 
         if 'feefighters' in kwargs:
-            self._merchant_key = kwargs['feefighters']._merchant_key
-            self._merchant_password = kwargs['feefighters']._merchant_password
+            self._merchant_key = kwargs['feefighters'].merchant_key
+            self._merchant_password = kwargs['feefighters'].merchant_password
         else:
             self._merchant_key = kwargs['merchant_key']
             self._merchant_password = kwargs['merchant_password']

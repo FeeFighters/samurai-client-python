@@ -1,11 +1,14 @@
 from django.db import models
+from django.core.exceptions import ValidationError
 from django.conf import settings
 import hashlib
 from django.contrib.auth.models import User
 from core import PaymentMethod as CorePaymentMethod
 
-def unique_id_for_user(user):
-    return hashlib.sha256(str(user.id) + settings.FEEFIGHTERSALT) # perhaps?
+def secret_id_for_user(user):
+    hash = hashlib.sha1()
+    hash.update(str(user.id) + settings.FEEFIGHTERS_SALT)
+    return hash.hexdigest()
 
 class PaymentMethod(models.Model):
     payment_method_token = models.CharField(max_length=100, editable=False, unique=True)
@@ -46,13 +49,17 @@ class PaymentMethod(models.Model):
         for field_name in self._core_payment_method.field_names:
             setattr(self._core_payment_method, field_name, getattr(self, field_name))
 
-#    def clean(self):
-#        """
-#        checks the custom field for a unique identifier related to self.user as a security measure
-#        """
-#        self.custom['django_user_unique'] ...
-#        self.custom['django_prev_payment_method_token'] ...
-#        ...
+    def clean(self):
+        "checks the custom field for a unique identifier related to self.user as a security measure"
+
+        if self.custom.get('django_user_unique', None) != secret_id_for_user(self.user):
+            raise ValidationError("Secret user id doesn't match!")
+        if 'django_prev_payment_method_token' in self.custom:
+            prev_payment_method_token_query = PaymentMethod.objects.filter(self.custom['django_prev_payment_method_token'])
+            if not prev_payment_method_token_query.exists():
+                raise ValidationError("Old payment method token not in database.")
+            if prev_payment_method_token_query[0].user != self.user:
+                raise ValidationError("Old payment method token not in database.")
        
 #    def replace(self, payment_method):
 #

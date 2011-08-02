@@ -206,7 +206,7 @@ class PaymentMethod(RemoteObject):
     payment_method_token = None
     created_at = None
     updated_at = None
-    custom = None
+    custom = {}
     is_retained = None
     is_redacted = None
     is_sensitive_data_valid = None
@@ -293,15 +293,16 @@ class Transaction(RemoteObject):
     reference_id        = None
     transaction_token   = None
     created_at          = None
-    descriptor          = None
-    custom              = None
+    descriptor          = {}
+    custom              = {}
     transaction_type    = None
     amount              = None
     currency_code       = None
     processor_success     = None
     payment_method      = None
 
-    field_names = ["reference_id", "created_at", "descriptor", "custom", "transaction_type", "amount", "currency_code", "processor_success", "payment_method", "info", "errors", "transaction_token"]
+    field_names = ["reference_id", "created_at", "descriptor", "custom", "transaction_type", "amount",
+                    "currency_code", "processor_success", "payment_method", "info", "errors", "transaction_token"]
 
     json_field_names = ["custom", "descriptor"]
 

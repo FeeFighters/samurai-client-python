@@ -1,20 +1,21 @@
+from django.db import models
 from django.conf import settings
-import feefighter.core
 import hashlib
+from django.contrib.auth.models import User
 from core import PaymentMethod as CorePaymentMethod
 
 def unique_id_for_user(user):
     return hashlib.sha256(str(user.id) + settings.FEEFIGHTERSALT) # perhaps?
 
-class PaymentMethod(Model, PaymentMethod):
-    payment_method_token = CharField(unique = True)
-    user = ForeignKey(User)
+class PaymentMethod(models.Model):
+    payment_method_token = models.CharField(max_length=100, editable=False)
+    user = models.ForeignKey(User)
 
     def __init__(self, *args, **kwargs):
         super(PaymentMethod, self).__init__(*args, **kwargs)
 
         self._core_payment_method = CorePaymentMethod(feefighters = settings.FEEFIGHTERS_CREDENTIALS,
-            payment_method_token, do_fetch = kwargs.get('do_fetch', True))
+            payment_method_token = kwargs["payment_method_token"], do_fetch = kwargs.get('do_fetch', True))
 
 #    def clean(self):
 #        """

@@ -8,7 +8,7 @@ def unique_id_for_user(user):
     return hashlib.sha256(str(user.id) + settings.FEEFIGHTERSALT) # perhaps?
 
 class PaymentMethod(models.Model):
-    payment_method_token = models.CharField(max_length=100, editable=False)
+    payment_method_token = models.CharField(max_length=100, editable=False, unique=True)
     user = models.ForeignKey(User)
 
     def __init__(self, *args, **kwargs):

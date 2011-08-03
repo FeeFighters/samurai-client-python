@@ -25,21 +25,28 @@ class PaymentMethod(models.Model):
         self._get_fields_from_core()
 
     def fetch(self):
-        self._core_payment_method.fetch()
+        result = self._core_payment_method.fetch()
         self._get_fields_from_core()
+        return result
 
     def redact(self):
-        self._core_payment_method.redact()
+        result = self._core_payment_method.redact()
         self._get_fields_from_core()
+        return result
 
     def retain(self):
-        self._core_payment_method.retain()
+        result = self._core_payment_method.retain()
         self._get_fields_from_core()
+        return result
 
     def update(self):
         self._set_fields_into_core()
-        self._core_payment_method.update()
+        result = self._core_payment_method.update()
         self._get_fields_from_core()
+        return result
+
+    def as_dict(self):
+        return self._core_payment_method.as_dict()
 
     def _get_fields_from_core(self):
         for field_name in self._core_payment_method.field_names + ['payment_method_token', 'populated']:

@@ -287,6 +287,11 @@ class PaymentMethod(RemoteObject):
     def redact(self):
         return self._remote_object_request("redact_payment_method", self.payment_method_token)
 
+    def as_dict(self):
+        fields_as_dict = {}
+        for field_name in self.field_names:
+            fields_as_dict[field_name] = getattr(self, field_name)
+        return fields_as_dict 
 
 class Transaction(RemoteObject):
 

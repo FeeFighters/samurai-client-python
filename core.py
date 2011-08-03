@@ -428,7 +428,7 @@ class Transaction(RemoteObject):
 
         return new_transaction
 
-    def credit(self, amount): # aka credit. requires a txn id
+    def credit(self, amount):
         # in case we're rebuilding this transaction from a reference_id, and they didn't want to fetch initially
         if self.transaction_token == None:
             self.fetch()
@@ -441,7 +441,7 @@ class Transaction(RemoteObject):
                                       reference_id=self.reference_id, do_fetch= False)
         new_transaction.transaction_token = self.transaction_token
 
-        new_transaction._transaction_request("credit_transaction", new_transaction.transaction_token)
+        new_transaction._transaction_request("credit_transaction", new_transaction.transaction_token, out_data)
 
         return new_transaction
 

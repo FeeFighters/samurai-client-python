@@ -313,6 +313,7 @@ class Transaction(RemoteObject):
     head_xml_element_name = "transaction"
 
     def __init__(self, **kwargs):
+        self.populated = False
         if kwargs.get('reference_id', None) == kwargs.get('payment_method', None) == None:
             raise ValueError("Must supply either a reference_id or a payment_method")
 
@@ -364,7 +365,8 @@ class Transaction(RemoteObject):
 
     def purchase(self, amount, currency_code, billing_reference, customer_reference): # default 'USD'?
         if self.reference_id:
-            return {"error":{"errors":[{"context": "client", "source": "client", "key": "attempted_purchase_on_existing_transaction" }], "info":[]}}
+            self.errors = [{"context": "client", "source": "client", "key": "attempted_purchase_on_existing_transaction" }]
+            return False
 
         out_data = {'transaction':{
             'type':'purchase',

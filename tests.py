@@ -509,7 +509,7 @@ class TestTransactionMethods(unittest.TestCase):
 
         self.assertEqual(type(transaction.payment_method), PaymentMethod)
         self.assertEqual(transaction.payment_method.payment_method_token, payment_method_token)
-        self.assertEqual(transaction.payment_method.first_name, "Nobody")
+        self.assertEqual(transaction.payment_method.first_name, None)  # do_fetch being False
 
         try:
             Transaction(feefighters = feefighters, processor_token = test_credentials.processor_token, do_fetch = False)

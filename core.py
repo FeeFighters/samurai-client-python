@@ -330,7 +330,8 @@ class Transaction(RemoteObject):
                 self.fetch()
         else:                   # create a new transaction                              
             self.payment_method = kwargs.get('payment_method', None)
-            self.payment_method.fetch()
+            if kwargs.get('do_fetch', True):
+                self.payment_method.fetch()
             self.processor_token = kwargs['processor_token'] # can be got from the transaction via fetch, if a reference_id is there
 
         self.errors = []

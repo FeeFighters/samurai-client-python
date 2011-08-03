@@ -3,58 +3,63 @@ from django.core.exceptions import ValidationError
 from django.conf import settings
 import hashlib
 from django.contrib.auth.models import User
-from core import PaymentMethod as CorePaymentMethod
+from core import PaymentMethod as CorePaymentMethod, Transaction as CoreTransaction
 
 def secret_id_for_user(user):
     hash = hashlib.sha1()
     hash.update(str(user.id) + settings.FEEFIGHTERS_SALT)
     return hash.hexdigest()
 
-class PaymentMethod(models.Model):
+class RemoteObject(object):
+    def as_dict(self):
+        return self._core_remote_object.as_dict()
+
+class PaymentMethod(models.Model, RemoteObject):
     payment_method_token = models.CharField(max_length=100, editable=False, unique=True)
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, editable=False)
 
     def __init__(self, *args, **kwargs):
         super(PaymentMethod, self).__init__(*args, **kwargs)
 
         # Gonna do_fetch = False here. We don't want to fetch every object every time we run PaymentMethod.objects.all() in the shell
         # And we won't have control over fetching when we do a filter.
-        self._core_payment_method = CorePaymentMethod(feefighters = settings.FEEFIGHTERS_CREDENTIALS,
+        self._core_remote_object = CorePaymentMethod(feefighters = settings.FEEFIGHTERS_CREDENTIALS,
             payment_method_token = self.payment_method_token, do_fetch = False)
 
         self._get_fields_from_core()
 
+    def _get_fields_from_core(self):
+        for field_name in self._core_remote_object.field_names + ['payment_method_token', 'populated']:
+            setattr(self, field_name, getattr(self._core_remote_object, field_name))
+
+    def _set_fields_into_core(self):
+        for field_name in self._core_remote_object.field_names:
+            setattr(self._core_remote_object, field_name, getattr(self, field_name))
+
     def fetch(self):
-        result = self._core_payment_method.fetch()
+        self._set_fields_into_core()
+        result = self._core_remote_object.fetch()
         self._get_fields_from_core()
         return result
 
     def redact(self):
-        result = self._core_payment_method.redact()
+        self._set_fields_into_core()
+        result = self._core_remote_object.redact()
         self._get_fields_from_core()
         return result
 
     def retain(self):
-        result = self._core_payment_method.retain()
+        self._set_fields_into_core()
+        result = self._core_remote_object.retain()
         self._get_fields_from_core()
         return result
 
     def update(self):
         self._set_fields_into_core()
-        result = self._core_payment_method.update()
+        result = self._core_remote_object.update()
         self._get_fields_from_core()
         return result
 
-    def as_dict(self):
-        return self._core_payment_method.as_dict()
-
-    def _get_fields_from_core(self):
-        for field_name in self._core_payment_method.field_names + ['payment_method_token', 'populated']:
-            setattr(self, field_name, getattr(self._core_payment_method, field_name))
-
-    def _set_fields_into_core(self):
-        for field_name in self._core_payment_method.field_names:
-            setattr(self._core_payment_method, field_name, getattr(self, field_name))
 
     def clean(self):
         "checks the custom field for a unique identifier related to self.user as a security measure"
@@ -73,6 +78,76 @@ class PaymentMethod(models.Model):
 #       self.payment_method_token = 
 #       self.delete()
 
-#class TransactionModel(Model, Transaction):
-#    transaction_method_token_field = CharField(unique = True)
-#    payment_method = ForeignKey(PaymentMethod)
+class Transaction(models.Model, RemoteObject):
+    transaction_token = models.CharField(max_length=100, editable=False)
+    processor_token = models.CharField(max_length=100, editable=False)
+    reference_id = models.CharField(unique = True, max_length=100, editable=False)
+    payment_method = models.ForeignKey(PaymentMethod, editable=False)
+#    transaction_type = models.CharField(max_length=20, editable=False)
+
+    def __init__(self, *args, **kwargs):
+        super(Transaction, self).__init__(*args, **kwargs)
+
+        # Gonna do_fetch = False here. We don't want to fetch every object every time we run Transaction.objects.all() in the shell
+        # And we won't have control over fetching when we do a filter.
+        self._core_remote_object = CoreTransaction(feefighters = settings.FEEFIGHTERS_CREDENTIALS,
+            payment_method = self.payment_method._core_remote_object, processor_token = self.processor_token, do_fetch = False)
+
+        self._get_fields_from_core(exclude = ["transaction_token", "reference_id"])
+
+    def _get_fields_from_core(self, exclude = []):
+        for field_name in set(self._core_remote_object.field_names + ['populated']) - set(['payment_method', 'processor_token']) - set(exclude):
+            setattr(self, field_name, getattr(self._core_remote_object, field_name))
+
+        # self.payment_method should really always be set, but I'm avoiding unnecessary errors if I made a mistake somewhere
+        if self.payment_method and self._core_remote_object.payment_method: 
+            self.payment_method._core_remote_object = self._core_remote_object.payment_method
+
+    def _set_fields_into_core(self):
+        for field_name in set(self._core_remote_object.field_names) - set(['payment_method', 'processor_token']):
+            setattr(self._core_remote_object, field_name, getattr(self, field_name))
+
+    def _save_new_transaction(self, new_transaction):
+        Transaction.objects.create(transaction_token = new_transaction.transaction_token, 
+            reference_id = new_transaction.reference_id, payment_method = self.payment_method) 
+
+    def purchase(self, amount, currency_code, billing_reference, customer_reference):
+        self._set_fields_into_core()
+        result = self._core_remote_object.purchase(amount, currency_code, billing_reference, customer_reference)
+        self._get_fields_from_core()
+        self.save()
+        return result
+
+    def authorize(self, amount, currency_code, billing_reference, customer_reference):
+        self._set_fields_into_core()
+        result = self._core_remote_object.authorize(amount, currency_code, billing_reference, customer_reference)
+        self._get_fields_from_core()
+        self.save()
+        return result
+
+    def capture(self, amount):
+        self._set_fields_into_core()
+        new_transaction = self._core_remote_object.capture(amount)
+        self._get_fields_from_core()
+        self._save_new_transaction(new_transaction)
+        return new_transaction
+
+    def void(self):
+        self._set_fields_into_core()
+        new_transaction = self._core_remote_object.void()
+        self._get_fields_from_core()
+        self._save_new_transaction(new_transaction)
+        return new_transaction
+
+    def credit(self, amount):
+        self._set_fields_into_core()
+        new_transaction = self._core_remote_object.credit(amount)
+        self._get_fields_from_core()
+        self._save_new_transaction(new_transaction)
+        return new_transaction
+
+    def fetch(self):
+        self._set_fields_into_core()
+        result = self._core_remote_object.fetch()
+        self._get_fields_from_core()
+        return result

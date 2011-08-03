@@ -754,7 +754,7 @@ class TestTransactionMethods(unittest.TestCase):
         check(transaction_to_capture, "authorize")
         capture_transaction = transaction_to_capture.capture(20.5)
         self.assertNotEqual(transaction_to_capture.reference_id, capture_transaction.reference_id) 
-        check(transaction_to_capture, "capture")
+        check(capture_transaction, "capture")
 
         # Re-fetch the original transaction, make sure nothing changed
         self.assertEqual(transaction.transaction_type, "authorize")
@@ -855,7 +855,7 @@ class TestTransactionMethods(unittest.TestCase):
         # copy ref_id, don't fetch, capture
         transaction = Transaction(feefighters = feefighters, reference_id=transaction.reference_id, do_fetch= False)
         capture_transaction = transaction.capture(20.5)
-        assertEquals(capture_transaction.errors, [])
+        self.assertEquals(capture_transaction.errors, [])
         self.assertEqual(capture_transaction.transaction_type, "capture")
 
         # copy ref_id, don't fetch, credit 

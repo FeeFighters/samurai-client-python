@@ -403,14 +403,15 @@ class Transaction(RemoteObject):
         if self.transaction_token == None:
             self.fetch()
 
-        new_transaction = Transaction(feefighters = self.feefighters, reference_id=self.reference_id, do_fetch= False)
+        new_transaction = Transaction(merchant_key = self._merchant_key, merchant_password = self._merchant_password, 
+                                      reference_id=self.reference_id, do_fetch= False)
         new_transaction.transaction_token = self.transaction_token
 
         out_data = {'transaction':{
             'amount': str(amount),
         }}
 
-        new_transaction._transaction_request("capture_transaction", self.transaction_token, out_data)
+        new_transaction._transaction_request("capture_transaction", new_transaction.transaction_token, out_data)
 
         return new_transaction
 
@@ -419,10 +420,11 @@ class Transaction(RemoteObject):
         if self.transaction_token == None:
             self.fetch()
 
-        new_transaction = Transaction(feefighters = self.feefighters, reference_id=self.reference_id, do_fetch= False)
+        new_transaction = Transaction(merchant_key = self._merchant_key, merchant_password = self._merchant_password, 
+                                      reference_id=self.reference_id, do_fetch= False)
         new_transaction.transaction_token = self.transaction_token
 
-        new_transaction._transaction_request("void_transaction", self.transaction_token)
+        new_transaction._transaction_request("void_transaction", new_transaction.transaction_token)
 
         return new_transaction
 
@@ -435,10 +437,11 @@ class Transaction(RemoteObject):
             'amount': str(amount),
         }}
 
-        new_transaction = Transaction(feefighters = self.feefighters, reference_id=self.reference_id, do_fetch= False)
+        new_transaction = Transaction(merchant_key = self._merchant_key, merchant_password = self._merchant_password, 
+                                      reference_id=self.reference_id, do_fetch= False)
         new_transaction.transaction_token = self.transaction_token
 
-        new_transaction._transaction_request("credit_transaction", self.transaction_token)
+        new_transaction._transaction_request("credit_transaction", new_transaction.transaction_token)
 
         return new_transaction
 

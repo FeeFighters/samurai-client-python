@@ -83,7 +83,7 @@ class Transaction(models.Model, RemoteObject):
     processor_token = models.CharField(max_length=100, editable=False)
     reference_id = models.CharField(unique = True, max_length=100, editable=False)
     payment_method = models.ForeignKey(PaymentMethod, editable=False)
-#    transaction_type = models.CharField(max_length=20, editable=False)
+    transaction_type = models.CharField(max_length=20, editable=False)
 
     def __init__(self, *args, **kwargs):
         super(Transaction, self).__init__(*args, **kwargs)
@@ -93,7 +93,8 @@ class Transaction(models.Model, RemoteObject):
         self._core_remote_object = CoreTransaction(feefighters = settings.FEEFIGHTERS_CREDENTIALS,
             payment_method = self.payment_method._core_remote_object, processor_token = self.processor_token, do_fetch = False)
 
-        self._get_fields_from_core(exclude = ["transaction_token", "reference_id"])
+        # exclude here since overwriting before fetch could wipe out what's from the DB
+        self._get_fields_from_core(exclude = ["transaction_token", "reference_id", "transaction_type"])
 
     def _get_fields_from_core(self, exclude = []):
         for field_name in set(self._core_remote_object.field_names + ['populated']) - set(['payment_method', 'processor_token']) - set(exclude):
@@ -108,8 +109,8 @@ class Transaction(models.Model, RemoteObject):
             setattr(self._core_remote_object, field_name, getattr(self, field_name))
 
     def _save_new_transaction(self, new_transaction):
-        Transaction.objects.create(transaction_token = new_transaction.transaction_token, 
-            reference_id = new_transaction.reference_id, payment_method = self.payment_method) 
+        Transaction.objects.create(transaction_token = new_transaction.transaction_token, reference_id = new_transaction.reference_id,
+            payment_method = self.payment_method, transaction_type = new_transaction.transaction_type) 
 
     def purchase(self, amount, currency_code, billing_reference, customer_reference):
         self._set_fields_into_core()

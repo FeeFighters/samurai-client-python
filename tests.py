@@ -688,6 +688,7 @@ class TestTransactionMethods(unittest.TestCase):
 
             expected_info = {'source':'processor', 'context':'gateway.transaction', 'key':'success'}
             self.assertTrue(expected_info in transaction.info, str(expected_info) + " not in " + str(transaction.info))
+            self.assertEqual(t.errors, [])
 
             self.assertEqual(t.transaction_type, t_type, t.errors)
 
@@ -700,26 +701,17 @@ class TestTransactionMethods(unittest.TestCase):
         # First, make an authorize transaction
         self.assertTrue(transaction.authorize(20.5, "USD", billing_reference, customer_reference), transaction.errors)
         check(transaction, "authorize")
-
-        # Now try to fetch the same transaction
-        transaction_test_1 = Transaction(feefighters = feefighters, reference_id = transaction.reference_id)
-        check(transaction_test_1, "authorize")
+        ref_id = transaction.reference_id
 
         # Now try to capture it
-        self.assertTrue(transaction.capture(20.5))
-        check(transaction, "capture")
+        capture_transaction = transaction.capture(20.5)
+        check(capture_transaction, "capture")
 
         # Now re-fetch the first transaction
-        ref_id = transaction_test_1.reference_id
-        transaction_test_1.fetch()
-        check(transaction_test_1, "authorize") # confirm that it is still an "authorize" transaction
-        self.assertNotEqual(transaction_test_1.reference_id, transaction.reference_id) # and that the ref IDs is different from the other txn
-        self.assertEqual(ref_id, transaction_test_1.reference_id) # but hasn't changed from the fetch
-
-        # Now fetch a copy of the new transaction
-        transaction_test_2 = Transaction(feefighters = feefighters, reference_id = transaction.reference_id)
-        check(transaction_test_2, "capture") 
-        self.assertEqual(transaction_test_2.reference_id, transaction.reference_id) 
+        self.assertTrue(transaction.fetch())
+        check(transaction, "authorize") # confirm that it is still an "authorize" transaction
+        self.assertNotEqual(transaction.reference_id, capture_transaction.reference_id) # and that the ref IDs is different from the other txn
+        self.assertEqual(ref_id, transaction.reference_id) # but hasn't changed from the fetch
 
     def test_authorize_capture_from_fetched(self):
         payment_method_token = _new_payment_method_token()
@@ -738,6 +730,7 @@ class TestTransactionMethods(unittest.TestCase):
             self.assertEqual(type(t.payment_method), PaymentMethod)
             self.assertEqual(t.payment_method.payment_method_token, payment_method_token)
             self.assertEqual(t.payment_method.first_name, "Nobody")
+            self.assertEqual(t.errors, [])
 
             self.assertTrue(t.populated)
 
@@ -758,10 +751,9 @@ class TestTransactionMethods(unittest.TestCase):
         transaction_to_capture = Transaction(feefighters = feefighters, reference_id = transaction.reference_id)
 
         # Capture, confirm that the ref_id and txn_type changed during the capture
-        ref_id = transaction_to_capture.reference_id
         check(transaction_to_capture, "authorize")
-        self.assertTrue(transaction_to_capture.capture(20.5))
-        self.assertNotEqual(ref_id, transaction_to_capture.reference_id) 
+        capture_transaction = transaction_to_capture.capture(20.5)
+        self.assertNotEqual(transaction_to_capture.reference_id, capture_transaction.reference_id) 
         check(transaction_to_capture, "capture")
 
         # Re-fetch the original transaction, make sure nothing changed
@@ -784,19 +776,24 @@ class TestTransactionMethods(unittest.TestCase):
         self.assertTrue(transaction.purchase(20.5, "USD", billing_reference, customer_reference), transaction.errors)
 
         self.assertEquals(transaction.transaction_type, "purchase")
-        self.assertTrue(transaction.void(), transaction.errors)
-        self.assertEquals(transaction.transaction_type, "void")
+        void_transaction = transaction.void()
+        self.assertEqual(void_transaction.errors, [])
+        self.assertEquals(void_transaction.transaction_type, "void")
 
         # from authorize
 
         transaction = Transaction(feefighters = feefighters, payment_method = payment_method, processor_token = test_credentials.processor_token, do_fetch= False)
 
         self.assertTrue(transaction.authorize(20.5, "USD", billing_reference, customer_reference), transaction.errors)
-        self.assertTrue(transaction.capture(20.5), transaction.errors)
+        capture_transaction = transaction.capture(20.5)
 
-        self.assertEquals(transaction.transaction_type, "capture")
-        self.assertTrue(transaction.void(), transaction.errors)
-        self.assertEquals(transaction.transaction_type, "void")
+        self.assertEqual(capture_transaction.errors, [])
+        self.assertEquals(capture_transaction.transaction_type, "capture")
+
+        void_transaction = capture_transaction.void()
+
+        self.assertEqual(void_transaction.errors, [])
+        self.assertEquals(void_transaction.transaction_type, "void")
 
 
     def test_credit(self):
@@ -812,9 +809,15 @@ class TestTransactionMethods(unittest.TestCase):
         self.assertTrue(transaction.purchase(20.5, "USD", billing_reference, customer_reference), transaction.errors)
 
         self.assertEquals(transaction.transaction_type, "purchase")
-        self.assertTrue(transaction.credit(10), transaction.errors)
-        self.assertEquals(transaction.transaction_type, "credit")
-        self.assertEquals(transaction.amount, "10.0")
+        credit_transaction = transaction.credit(10)
+
+        self.assertEquals(credit_transaction.errors, [])
+        self.assertEquals(credit_transaction.transaction_type, "credit")
+
+        self.assertEquals(credit_transaction.amount, "10.0")
+
+        self.assertTrue(transaction.fetch())
+        self.assertEquals(transaction.amount, "20.5")
 
     def test_use_unfetched_transaction(self):
         "Trying the sequence of events with all copied transactions, without calling fetch explicitly"
@@ -832,8 +835,9 @@ class TestTransactionMethods(unittest.TestCase):
 
         # copy ref_id, don't fetch, void
         transaction = Transaction(feefighters = feefighters, reference_id=transaction.reference_id, do_fetch= False)
-        self.assertTrue(transaction.void(), transaction.errors)
-        self.assertEqual(transaction.transaction_type, "void")
+        void_transaction = transaction.void()
+        self.assertEqual(void_transaction.errors, [])
+        self.assertEqual(void_transaction.transaction_type, "void")
 
         ###
         # another sequence
@@ -850,12 +854,14 @@ class TestTransactionMethods(unittest.TestCase):
 
         # copy ref_id, don't fetch, capture
         transaction = Transaction(feefighters = feefighters, reference_id=transaction.reference_id, do_fetch= False)
-        self.assertTrue(transaction.capture(20.5), transaction.errors)
-        self.assertEqual(transaction.transaction_type, "capture")
+        capture_transaction = transaction.capture(20.5)
+        assertEquals(capture_transaction.errors, [])
+        self.assertEqual(capture_transaction.transaction_type, "capture")
 
         # copy ref_id, don't fetch, credit 
-        transaction = Transaction(feefighters = feefighters, reference_id=transaction.reference_id, do_fetch= False)
-        self.assertTrue(transaction.credit(10), transaction.errors)
-        self.assertEqual(transaction.transaction_type, "credit")
+        capture_transaction = Transaction(feefighters = feefighters, reference_id=capture_transaction.reference_id, do_fetch= False)
+        credit_transaction = capture_transaction.credit(10)
+        self.assertEqual(credit_transaction.errors, [])
+        self.assertEqual(credit_transaction.transaction_type, "credit")
 
 unittest.main()

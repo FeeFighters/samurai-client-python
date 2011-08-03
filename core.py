@@ -403,18 +403,28 @@ class Transaction(RemoteObject):
         if self.transaction_token == None:
             self.fetch()
 
+        new_transaction = Transaction(feefighters = self.feefighters, reference_id=self.reference_id, do_fetch= False)
+        new_transaction.transaction_token = self.transaction_token
+
         out_data = {'transaction':{
             'amount': str(amount),
         }}
 
-        return self._transaction_request("capture_transaction", self.transaction_token, out_data)
+        new_transaction._transaction_request("capture_transaction", self.transaction_token, out_data)
+
+        return new_transaction
 
     def void(self):
         # in case we're rebuilding this transaction from a reference_id, and they didn't want to fetch initially
         if self.transaction_token == None:
             self.fetch()
 
-        return self._transaction_request("void_transaction", self.transaction_token)
+        new_transaction = Transaction(feefighters = self.feefighters, reference_id=self.reference_id, do_fetch= False)
+        new_transaction.transaction_token = self.transaction_token
+
+        new_transaction._transaction_request("void_transaction", self.transaction_token)
+
+        return new_transaction
 
     def credit(self, amount): # aka credit. requires a txn id
         # in case we're rebuilding this transaction from a reference_id, and they didn't want to fetch initially
@@ -425,7 +435,12 @@ class Transaction(RemoteObject):
             'amount': str(amount),
         }}
 
-        return self._transaction_request("credit_transaction", self.transaction_token, out_data)
+        new_transaction = Transaction(feefighters = self.feefighters, reference_id=self.reference_id, do_fetch= False)
+        new_transaction.transaction_token = self.transaction_token
+
+        new_transaction._transaction_request("credit_transaction", self.transaction_token)
+
+        return new_transaction
 
     def fetch(self):
         return self._transaction_request("fetch_transaction", self.reference_id, {},list(set(self.field_names) - set(['reference_id'])))

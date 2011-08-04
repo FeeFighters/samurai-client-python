@@ -116,7 +116,7 @@ class Transaction(models.Model, RemoteObject):
         
 
     def _save_new_transaction(self, new_transaction):
-        Transaction.objects.create(transaction_token = new_transaction.transaction_token, reference_id = new_transaction.reference_id,
+        return Transaction.objects.create(transaction_token = new_transaction.transaction_token, reference_id = new_transaction.reference_id,
             payment_method = self.payment_method, transaction_type = new_transaction.transaction_type) 
 
     def purchase(self, amount, currency_code, billing_reference, customer_reference):
@@ -137,22 +137,19 @@ class Transaction(models.Model, RemoteObject):
         self._set_fields_into_core()
         new_transaction = self._core_remote_object.capture(amount)
         self._get_fields_from_core()
-        self._save_new_transaction(new_transaction)
-        return new_transaction
+        return self._save_new_transaction(new_transaction)
 
     def void(self):
         self._set_fields_into_core()
         new_transaction = self._core_remote_object.void()
         self._get_fields_from_core()
-        self._save_new_transaction(new_transaction)
-        return new_transaction
+        return self._save_new_transaction(new_transaction)
 
     def credit(self, amount):
         self._set_fields_into_core()
         new_transaction = self._core_remote_object.credit(amount)
         self._get_fields_from_core()
-        self._save_new_transaction(new_transaction)
-        return new_transaction
+        return self._save_new_transaction(new_transaction)
 
     def fetch(self):
         self._set_fields_into_core()

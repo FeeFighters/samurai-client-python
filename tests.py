@@ -864,4 +864,6 @@ class TestTransactionMethods(unittest.TestCase):
         self.assertEqual(credit_transaction.errors, [])
         self.assertEqual(credit_transaction.transaction_type, "credit")
 
-unittest.main()
+
+if __name__ == '__main__':
+    unittest.main()

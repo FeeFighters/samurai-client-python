@@ -28,7 +28,7 @@ def _new_payment_method_token():
     return payment_method_token
 
 initial_test_data = {
-    "redirect_url":"http://edulender.com",
+    "redirect_url":"http://example.com",
     "merchant_key":test_credentials.merchant_key,
     "custom":'{"a":"b", "c":{"d":"e"}}',
     "credit_card[first_name]":"Nobody",
@@ -67,7 +67,7 @@ class TestTransparentRedirect(unittest.TestCase):
         request = REQUESTS["transparent_redirect"]
 
         redir_url, _ = _transparent_redirect( initial_test_data )
-        self.assertEqual("www.edulender.com", redir_url)
+        self.assertEqual("www.example.com", redir_url)
 
 
 class TestXMLTODict(unittest.TestCase):

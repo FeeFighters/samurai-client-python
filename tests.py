@@ -865,5 +865,177 @@ class TestTransactionMethods(unittest.TestCase):
         self.assertEqual(credit_transaction.transaction_type, "credit")
 
 
+
+
+class TestDjangoModels(unittest.TestCase):
+
+    def test_sequence_not_through_db_1(self):
+        from models import PaymentMethod, Transaction
+        import time
+
+        PaymentMethod.objects.create(_new_payment_method_token())
+
+        ### purchase void 
+
+        billing_reference = "b" + str(int(time.time()))
+        customer_reference = "c" + str(int(time.time()))
+
+        Transaction.objects.all().delete()
+        pm = PaymentMethod.objects.all()[0]
+        t = Transaction(payment_method = pm, processor_token = test_credentials.processor_token)
+        t.purchase(20, "USD", billing_reference, customer_reference)
+        self.assertTrue( t.errors == [] )
+        self.assertTrue( t.transaction_type == "purchase" )
+        self.assertTrue( Transaction.objects.all().count() == 1 )
+        self.assertTrue( t.fetch() )
+
+        void_txn = t.void()
+        self.assertTrue( void_txn.errors == [] )
+        self.assertTrue( void_txn.transaction_type == "void" )
+        self.assertTrue( Transaction.objects.all().count() == 2 )
+        self.assertTrue( void_txn.fetch() )
+
+        # check that stuff is in DB
+
+        pt_db = Transaction.objects.get(transaction_type = "purchase", transaction_token = t.transaction_token)
+        self.assertTrue( pt_db.fetch() )
+
+        vt_db = Transaction.objects.get(transaction_type = "void", transaction_token = t.transaction_token)
+        self.assertTrue( vt_db.fetch() )
+
+
+    def test_sequence_not_through_db_2(self):
+        from models import PaymentMethod, Transaction
+        import time
+
+        PaymentMethod.objects.create(_new_payment_method_token())
+
+        ### authorize capture credit
+
+        billing_reference = "b" + str(int(time.time()))
+        customer_reference = "c" + str(int(time.time()))
+
+        Transaction.objects.all().delete()
+        pm = PaymentMethod.objects.all()[0]
+        t = Transaction(payment_method = pm, processor_token = test_credentials.processor_token)
+        t.authorize(20, "USD", billing_reference, customer_reference)
+        self.assertTrue( t.errors == [] )
+        self.assertTrue( t.transaction_type == "authorize" )
+        self.assertTrue( Transaction.objects.all().count() == 1 )
+        self.assertTrue( t.fetch() )
+
+        capture_txn = t.capture(18)
+        self.assertTrue( capture_txn.errors == [] )
+        self.assertTrue( capture_txn.transaction_type == "capture" )
+        self.assertTrue( Transaction.objects.all().count() == 2 )
+
+        credit_txn = capture_txn.credit(10)
+        self.assertTrue( credit_txn.errors == [] )
+        self.assertTrue( credit_txn.transaction_type == "credit" )
+        self.assertTrue( Transaction.objects.all().count() == 3 )
+
+
+        # check that stuff is in DB
+
+        at_db = Transaction.objects.get(transaction_type = "authorize", transaction_token = t.transaction_token)
+        self.assertTrue( at_db.fetch() )
+
+        cat_db = Transaction.objects.get(transaction_type = "capture", transaction_token = t.transaction_token)
+        self.assertTrue( cat_db.fetch() )
+
+        crt_db = Transaction.objects.get(transaction_type = "credit", transaction_token = t.transaction_token)
+        self.assertTrue( crt_db.fetch() )
+
+        self.assertTrue( set([t.transaction_type for t in Transaction.objects.all()]) == set(["credit", "authorize", "capture"]) )
+
+
+
+    def test_sequence_through_db_1(self):
+        from models import PaymentMethod, Transaction
+        import time
+
+        PaymentMethod.objects.create(_new_payment_method_token())
+
+        ### purchase void 
+
+        billing_reference = "b" + str(int(time.time()))
+        customer_reference = "c" + str(int(time.time()))
+
+        Transaction.objects.all().delete()
+        pm = PaymentMethod.objects.all()[0]
+        t = Transaction(payment_method = pm, processor_token = test_credentials.processor_token)
+        t.purchase(20, "USD", billing_reference, customer_reference)
+        self.assertTrue( t.errors == [] )
+        self.assertTrue( t.transaction_type == "purchase" )
+        self.assertTrue( Transaction.objects.all().count() == 1 )
+        self.assertTrue( t.fetch() )
+
+        t = Transaction.objects.get(reference_id = t.reference_id)
+
+        void_txn = t.void()
+        self.assertTrue( void_txn.errors == [] )
+        self.assertTrue( void_txn.transaction_type == "void" )
+        self.assertTrue( Transaction.objects.all().count() == 2 )
+        self.assertTrue( void_txn.fetch() )
+
+        # check that stuff is in DB
+
+        pt_db = Transaction.objects.get(transaction_type = "purchase", transaction_token = t.transaction_token)
+        self.assertTrue( pt_db.fetch() )
+
+        vt_db = Transaction.objects.get(transaction_type = "void", transaction_token = t.transaction_token)
+        self.assertTrue( vt_db.fetch() )
+
+
+    def test_sequence_through_db_2(self):
+        from models import PaymentMethod, Transaction
+        import time
+
+        PaymentMethod.objects.create(_new_payment_method_token())
+
+        ### authorize capture credit
+
+        billing_reference = "b" + str(int(time.time()))
+        customer_reference = "c" + str(int(time.time()))
+
+        Transaction.objects.all().delete()
+        pm = PaymentMethod.objects.all()[0]
+        t = Transaction(payment_method = pm, processor_token = test_credentials.processor_token)
+        t.authorize(20, "USD", billing_reference, customer_reference)
+        self.assertTrue( t.errors == [] )
+        self.assertTrue( t.transaction_type == "authorize" )
+        self.assertTrue( Transaction.objects.all().count() == 1 )
+        self.assertTrue( t.fetch() )
+
+        t = Transaction.objects.get(reference_id = t.reference_id)
+
+        capture_txn = t.capture(18)
+        self.assertTrue( capture_txn.errors == [] )
+        self.assertTrue( capture_txn.transaction_type == "capture" )
+        self.assertTrue( Transaction.objects.all().count() == 2 )
+
+        capture_txn = Transaction.objects.get(reference_id = capture_txn.reference_id)
+
+        credit_txn = capture_txn.credit(10)
+        self.assertTrue( credit_txn.errors == [] )
+        self.assertTrue( credit_txn.transaction_type == "credit" )
+        self.assertTrue( Transaction.objects.all().count() == 3 )
+
+
+        # check that stuff is in DB
+
+        at_db = Transaction.objects.get(transaction_type = "authorize", transaction_token = t.transaction_token)
+        self.assertTrue( at_db.fetch() )
+
+        cat_db = Transaction.objects.get(transaction_type = "capture", transaction_token = t.transaction_token)
+        self.assertTrue( cat_db.fetch() )
+
+        crt_db = Transaction.objects.get(transaction_type = "credit", transaction_token = t.transaction_token)
+        self.assertTrue( crt_db.fetch() )
+
+        self.assertTrue( set([t.transaction_type for t in Transaction.objects.all()]) == set(["credit", "authorize", "capture"]) )
+
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -10,11 +10,11 @@ from edulender.samurai_client_python.models import PaymentMethod
 
 def payment_method_redirect(request, update):
     if update:
-        success_redirect = settings.FEEFIGHTER_UPDATEMETHOD_REDIRECT
-        error_redirect = settings.FEEFIGHTER_UPDATEMETHOD_REDIRECT
+        success_redirect = settings.SAMURAI_UPDATEMETHOD_REDIRECT
+        error_redirect = settings.SAMURAI_UPDATEMETHOD_REDIRECT
     else:
-        success_redirect = settings.FEEFIGHTER_NEWMETHOD_REDIRECT
-        error_redirect = settings.FEEFIGHTER_NEWMETHOD_REDIRECT
+        success_redirect = settings.SAMURAI_NEWMETHOD_REDIRECT
+        error_redirect = settings.SAMURAI_NEWMETHOD_REDIRECT
 
     if not 'payment_method_token' in request.GET:
         return HttpResponseRedirect( reverse(error_redirect ) )
@@ -65,7 +65,7 @@ def get_transparent_redirect_form_initial(user, base_url, payment_method = None,
     
     init['custom']['django_user_unique'] = secret_id_for_user(user)
 
-    init['merchant_key'] = settings.FEEFIGHTERS_CREDENTIALS.merchant_key
+    init['merchant_key'] = settings.SAMURAI_CREDENTIALS.merchant_key
 
     if update:
         init['redirect_url'] = base_url + reverse('samurai-update-payment-method-redirect')

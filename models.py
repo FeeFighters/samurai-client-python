@@ -7,7 +7,7 @@ from core import PaymentMethod as CorePaymentMethod, Transaction as CoreTransact
 
 def secret_id_for_user(user):
     hash = hashlib.sha1()
-    hash.update(str(user.id) + settings.FEEFIGHTERS_SALT)
+    hash.update(str(user.id) + settings.SAMURAI_SALT)
     return hash.hexdigest()
 
 class RemoteObject(object):
@@ -23,7 +23,7 @@ class PaymentMethod(models.Model, RemoteObject):
 
         # Gonna do_fetch = False here. We don't want to fetch every object every time we run PaymentMethod.objects.all() in the shell
         # And we won't have control over fetching when we do a filter.
-        self._core_remote_object = CorePaymentMethod(feefighters = settings.FEEFIGHTERS_CREDENTIALS,
+        self._core_remote_object = CorePaymentMethod(feefighters = settings.SAMURAI_CREDENTIALS,
             payment_method_token = self.payment_method_token, do_fetch = False)
 
         self._get_fields_from_core()
@@ -91,10 +91,10 @@ class Transaction(models.Model, RemoteObject):
         # Gonna do_fetch = False here. We don't want to fetch every object every time we run Transaction.objects.all() in the shell
         # And we won't have control over fetching when we do a filter.
         if self.reference_id == None:
-            self._core_remote_object = CoreTransaction(feefighters = settings.FEEFIGHTERS_CREDENTIALS,
+            self._core_remote_object = CoreTransaction(feefighters = settings.SAMURAI_CREDENTIALS,
                 payment_method = self.payment_method._core_remote_object, processor_token = self.processor_token, do_fetch = False)
         else:
-            self._core_remote_object = CoreTransaction(feefighters = settings.FEEFIGHTERS_CREDENTIALS,
+            self._core_remote_object = CoreTransaction(feefighters = settings.SAMURAI_CREDENTIALS,
                 reference_id = self.reference_id, processor_token = self.processor_token, do_fetch = False)
 
         # exclude here since overwriting before fetch could wipe out what's from the DB

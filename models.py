@@ -90,11 +90,16 @@ class Transaction(models.Model, RemoteObject):
 
         # Gonna do_fetch = False here. We don't want to fetch every object every time we run Transaction.objects.all() in the shell
         # And we won't have control over fetching when we do a filter.
-        self._core_remote_object = CoreTransaction(feefighters = settings.FEEFIGHTERS_CREDENTIALS,
-            payment_method = self.payment_method._core_remote_object, processor_token = self.processor_token, do_fetch = False)
+        if self.reference_id == None:
+            self._core_remote_object = CoreTransaction(feefighters = settings.FEEFIGHTERS_CREDENTIALS,
+                payment_method = self.payment_method._core_remote_object, processor_token = self.processor_token, do_fetch = False)
+        else:
+            self._core_remote_object = CoreTransaction(feefighters = settings.FEEFIGHTERS_CREDENTIALS,
+                reference_id = self.reference_id, processor_token = self.processor_token, do_fetch = False)
 
         # exclude here since overwriting before fetch could wipe out what's from the DB
         self._get_fields_from_core(exclude = ["transaction_token", "reference_id", "transaction_type"])
+        self._set_fields_into_core()
 
     def _get_fields_from_core(self, exclude = []):
         for field_name in set(self._core_remote_object.field_names + ['populated']) - set(['payment_method', 'processor_token']) - set(exclude):
@@ -107,6 +112,8 @@ class Transaction(models.Model, RemoteObject):
     def _set_fields_into_core(self):
         for field_name in set(self._core_remote_object.field_names) - set(['payment_method', 'processor_token']):
             setattr(self._core_remote_object, field_name, getattr(self, field_name))
+        self._core_remote_object.payment_method = self.payment_method._core_remote_object
+        
 
     def _save_new_transaction(self, new_transaction):
         Transaction.objects.create(transaction_token = new_transaction.transaction_token, reference_id = new_transaction.reference_id,

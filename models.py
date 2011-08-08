@@ -121,6 +121,7 @@ class Transaction(models.Model, RemoteObject):
             payment_method = self.payment_method, transaction_type = new_transaction_core.transaction_type) 
         try:
             new_transaction.full_clean()
+            new_transaction.save()
         except:
             self._set_payment_method_last_transaction_error(True)
             return None
@@ -135,34 +136,28 @@ class Transaction(models.Model, RemoteObject):
 
     def purchase(self, amount, currency_code, billing_reference, customer_reference):
         self._set_fields_into_core()
-        if self._core_remote_object.purchase(amount, currency_code, billing_reference, customer_reference):
-            self._get_fields_from_core()
-            try:
-                self.full_clean()
-            except:
-                self._set_payment_method_last_transaction_error(True)
-                return False
-            self.save()
-            self._set_payment_method_last_transaction_error(False)
-            return True
-        else:
+        result = self._core_remote_object.purchase(amount, currency_code, billing_reference, customer_reference)
+        self._get_fields_from_core()
+        try:
+            self.full_clean()
+        except:
             self._set_payment_method_last_transaction_error(True)
             return False
+        self.save()
+        self._set_payment_method_last_transaction_error(not result)
+        return result
 
     def authorize(self, amount, currency_code, billing_reference, customer_reference):
         self._set_fields_into_core()
-        if self._core_remote_object.authorize(amount, currency_code, billing_reference, customer_reference):
-            self._get_fields_from_core()
-            try:
-                self.full_clean()
-            except:
-                return False
-            self.save()
-            self._set_payment_method_last_transaction_error(False)
-            return True
-        else:
-            self._set_payment_method_last_transaction_error(True)
+        result = self._core_remote_object.authorize(amount, currency_code, billing_reference, customer_reference)
+        self._get_fields_from_core()
+        try:
+            self.full_clean()
+        except:
             return False
+        self.save()
+        self._set_payment_method_last_transaction_error(not result)
+        return result
 
     def capture(self, amount):
         self._set_fields_into_core()

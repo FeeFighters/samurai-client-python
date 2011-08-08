@@ -69,10 +69,9 @@ class PaymentMethod(models.Model, RemoteObject):
             raise ValidationError("Secret user id doesn't match!")
         if 'django_prev_payment_method_token' in self.custom:
             prev_payment_method_token_query = PaymentMethod.objects.filter(payment_method_token = self.custom['django_prev_payment_method_token'])
-            if not prev_payment_method_token_query.exists():
-                raise ValidationError("Old payment method token not in database.")
-            if prev_payment_method_token_query[0].user != self.user:
-                raise ValidationError("Old payment method token not in database.")
+            if prev_payment_method_token_query.exists():
+                if prev_payment_method_token_query[0].user != self.user:
+                    raise ValidationError("Old payment method token of different user.")
        
 #    def replace(self, payment_method):
 #

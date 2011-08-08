@@ -115,41 +115,56 @@ class Transaction(models.Model, RemoteObject):
         self._core_remote_object.payment_method = self.payment_method._core_remote_object
         
 
-    def _save_new_transaction(self, new_transaction):
-        return Transaction.objects.create(transaction_token = new_transaction.transaction_token, reference_id = new_transaction.reference_id,
-            payment_method = self.payment_method, transaction_type = new_transaction.transaction_type) 
+    def _save_new_transaction(self, new_transaction_core):
+        new_transaction = Transaction(transaction_token = new_transaction_core.transaction_token, reference_id = new_transaction_core.reference_id,
+            payment_method = self.payment_method, transaction_type = new_transaction_core.transaction_type) 
+        try:
+            new_transaction.full_clean()
+        except:
+            return None
+        else:
+            return new_transaction
 
     def purchase(self, amount, currency_code, billing_reference, customer_reference):
         self._set_fields_into_core()
-        result = self._core_remote_object.purchase(amount, currency_code, billing_reference, customer_reference)
-        self._get_fields_from_core()
-        self.save()
-        return result
+        if self._core_remote_object.purchase(amount, currency_code, billing_reference, customer_reference):
+            self._get_fields_from_core()
+            try:
+                self.full_clean()
+            except:
+                return False
+            self.save()
+            return True
+        else:
+            return False
 
     def authorize(self, amount, currency_code, billing_reference, customer_reference):
         self._set_fields_into_core()
-        result = self._core_remote_object.authorize(amount, currency_code, billing_reference, customer_reference)
-        self._get_fields_from_core()
-        self.save()
-        return result
+        if self._core_remote_object.authorize(amount, currency_code, billing_reference, customer_reference):
+            self._get_fields_from_core()
+            try:
+                self.full_clean()
+            except:
+                return False
+            self.save()
+            return True
+        else:
+            return False
 
     def capture(self, amount):
         self._set_fields_into_core()
-        new_transaction = self._core_remote_object.capture(amount)
-        self._get_fields_from_core()
-        return self._save_new_transaction(new_transaction)
+        new_transaction_core = self._core_remote_object.capture(amount)
+        return self._save_new_transaction(new_transaction_core)
 
     def void(self):
         self._set_fields_into_core()
-        new_transaction = self._core_remote_object.void()
-        self._get_fields_from_core()
-        return self._save_new_transaction(new_transaction)
+        new_transaction_core = self._core_remote_object.void()
+        return self._save_new_transaction(new_transaction_core)
 
     def credit(self, amount):
         self._set_fields_into_core()
-        new_transaction = self._core_remote_object.credit(amount)
-        self._get_fields_from_core()
-        return self._save_new_transaction(new_transaction)
+        new_transaction_core = self._core_remote_object.credit(amount)
+        return self._save_new_transaction(new_transaction_core)
 
     def fetch(self):
         self._set_fields_into_core()

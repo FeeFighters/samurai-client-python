@@ -33,6 +33,7 @@ def payment_method_redirect(request, update):
             if old_payment_method.redact():
                 old_payment_method.delete()
 
+        new_payment_method.retain()
         new_payment_method.save()
 
         return HttpResponseRedirect( reverse(success_redirect ) 
@@ -56,6 +57,9 @@ def get_transparent_redirect_form_initial(user, base_url, payment_method = None,
     init = {}
 
     if payment_method != None:
+#        payment_method_data = payment_method.as_dict()
+#        for key, value in payment_method_data.iteritems():
+#            errors = 
         init.update(payment_method.as_dict()) # important to note that this may carry over custom set by the client consumer
         init["custom"] = dict(init["custom"]) # make a copy so I don't change the data in the payment_method
         if update:

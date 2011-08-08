@@ -17,6 +17,7 @@ class RemoteObject(object):
 class PaymentMethod(models.Model, RemoteObject):
     payment_method_token = models.CharField(max_length=100, editable=False, unique=True)
     user = models.ForeignKey(User, editable=False)
+    last_transaction_error = models.BooleanField(default=False) # stores whether the last transaction was an error
 
     def __init__(self, *args, **kwargs):
         super(PaymentMethod, self).__init__(*args, **kwargs)
@@ -121,9 +122,16 @@ class Transaction(models.Model, RemoteObject):
         try:
             new_transaction.full_clean()
         except:
+            self._set_payment_method_last_transaction_error(True)
             return None
         else:
+            self._set_payment_method_last_transaction_error(False)
             return new_transaction
+
+    def _set_payment_method_last_transaction_error(self, error):
+        payment_method = self.payment_method
+        payment_method.last_transaction_error = error
+        payment_method.save()
 
     def purchase(self, amount, currency_code, billing_reference, customer_reference):
         self._set_fields_into_core()
@@ -132,10 +140,13 @@ class Transaction(models.Model, RemoteObject):
             try:
                 self.full_clean()
             except:
+                self._set_payment_method_last_transaction_error(True)
                 return False
             self.save()
+            self._set_payment_method_last_transaction_error(False)
             return True
         else:
+            self._set_payment_method_last_transaction_error(True)
             return False
 
     def authorize(self, amount, currency_code, billing_reference, customer_reference):
@@ -147,8 +158,10 @@ class Transaction(models.Model, RemoteObject):
             except:
                 return False
             self.save()
+            self._set_payment_method_last_transaction_error(False)
             return True
         else:
+            self._set_payment_method_last_transaction_error(True)
             return False
 
     def capture(self, amount):

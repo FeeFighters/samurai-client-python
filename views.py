@@ -8,7 +8,7 @@ from models import secret_id_for_user
 from edulender.samurai_client_python.models import PaymentMethod
 
 
-def payment_method_redirect(request, update):
+def payment_method_redirect(request, update ):
     if update:
         success_redirect = settings.SAMURAI_UPDATEMETHOD_REDIRECT
         error_redirect = settings.SAMURAI_UPDATEMETHOD_REDIRECT
@@ -30,8 +30,8 @@ def payment_method_redirect(request, update):
 
         if update:
             old_payment_method = PaymentMethod.objects.get(payment_method_token = new_payment_method.custom['django_prev_payment_method_token'])
-            if old_payment_method.redact():
-                old_payment_method.delete()
+            old_payment_method.redact()
+            old_payment_method.delete()
 
         new_payment_method.retain()
         new_payment_method.save()
@@ -55,6 +55,7 @@ def update_payment_method_redirect(request):
 
 def get_transparent_redirect_form_initial(user, base_url, payment_method = None, update = False): 
     init = {}
+    update_url = update
 
     if payment_method != None:
         # important to note that this may carry over custom set by the client consumer, which we shouldn't change
@@ -65,8 +66,18 @@ def get_transparent_redirect_form_initial(user, base_url, payment_method = None,
                 field['error'] = "This field is required"
             init[key] = field
         init["custom"]['value'] = dict(init["custom"]['value']) # make a copy so I don't change the data in the payment_method
+
         if update:
-            init["custom"]['value']["django_prev_payment_method_token"] = payment_method.payment_method_token # passing on to the next payment method
+            if PaymentMethod.objects.filter(payment_method_token = payment_method.payment_method_token, user = user).exists():
+                init["custom"]['value']["django_prev_payment_method_token"] = payment_method.payment_method_token # passing on to the next payment method
+            else:
+                old_token_to_update = payment_method.custom.get('django_prev_payment_method_token', "not in DB")
+                if PaymentMethod.objects.filter(payment_method_token = old_token_to_update, user = user).exists():
+                    # we probably tried to update the payment method, but the replacement had an error, so it wasn't saved
+                    # so we're propagating the token to update
+                    init["custom"]['value']["django_prev_payment_method_token"] = old_token_to_update 
+                else:
+                    update_url = False
     else:
         init["custom"] = {'value': {} }
     
@@ -74,7 +85,7 @@ def get_transparent_redirect_form_initial(user, base_url, payment_method = None,
 
     init['merchant_key'] = {'value': settings.SAMURAI_CREDENTIALS.merchant_key}
 
-    if update:
+    if update_url:
         init['redirect_url'] = {'value': base_url + reverse('samurai-update-payment-method-redirect')}
     else:
         init['redirect_url'] = {'value': base_url + reverse('samurai-new-payment-method-redirect')}

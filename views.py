@@ -57,24 +57,42 @@ def get_transparent_redirect_form_initial(user, base_url, payment_method = None,
     init = {}
 
     if payment_method != None:
-#        payment_method_data = payment_method.as_dict()
-#        for key, value in payment_method_data.iteritems():
-#            errors = 
-        init.update(payment_method.as_dict()) # important to note that this may carry over custom set by the client consumer
-        init["custom"] = dict(init["custom"]) # make a copy so I don't change the data in the payment_method
+        # important to note that this may carry over custom set by the client consumer, which we shouldn't change
+        payment_method_data = payment_method.as_dict() 
+        for key, value in payment_method_data.iteritems():
+            field = {'value' : value}
+            if value == "" and key != "address_2":
+                field['error'] = "This field is required"
+            init[key] = field
+        init["custom"]['value'] = dict(init["custom"]['value']) # make a copy so I don't change the data in the payment_method
         if update:
-            init["custom"]["django_prev_payment_method_token"] = payment_method.payment_method_token # passing on to the next payment method
+            init["custom"]['value']["django_prev_payment_method_token"] = payment_method.payment_method_token # passing on to the next payment method
     else:
-        init["custom"] = {}
+        init["custom"] = {'value': {} }
     
-    init['custom']['django_user_unique'] = secret_id_for_user(user)
+    init['custom']['value']['django_user_unique'] = secret_id_for_user(user)
 
-    init['merchant_key'] = settings.SAMURAI_CREDENTIALS.merchant_key
+    init['merchant_key'] = {'value': settings.SAMURAI_CREDENTIALS.merchant_key}
 
     if update:
-        init['redirect_url'] = base_url + reverse('samurai-update-payment-method-redirect')
+        init['redirect_url'] = {'value': base_url + reverse('samurai-update-payment-method-redirect')}
     else:
-        init['redirect_url'] = base_url + reverse('samurai-new-payment-method-redirect')
+        init['redirect_url'] = {'value': base_url + reverse('samurai-new-payment-method-redirect')}
 
-    init['custom'] = json.dumps(init['custom'])
+    init['custom']['value'] = json.dumps(init['custom']['value'])
+
+    init['card_number'] = {}
+    init['verification_value'] = {}
+
+    if payment_method:
+        if payment_method.last_four_digits:
+            init['card_number']['value'] = "*" * 12 + payment_method.last_four_digits
+        if not payment_method.is_sensitive_data_valid:
+            init['verification_value']['error'] = "Your credit card number or security code are invalid"
+            init['card_number']['error'] = init['verification_value']['error']
+
+        if payment_method.last_transaction_error:
+            # we only find this out after a failed transaction.
+            init['non_field_error'] = "There was an error with your information. Please look it over carefully and try again."
+
     return init

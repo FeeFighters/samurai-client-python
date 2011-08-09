@@ -28,7 +28,7 @@ def _new_payment_method_token():
     return payment_method_token
 
 initial_test_data = {
-    "redirect_url":"http://example.com",
+    "redirect_url":"http://localhost",
     "merchant_key":test_credentials.merchant_key,
     "custom":'{"a":"b", "c":{"d":"e"}}',
     "credit_card[first_name]":"Nobody",
@@ -870,10 +870,11 @@ class TestTransactionMethods(unittest.TestCase):
 class TestDjangoModels(unittest.TestCase):
 
     def test_sequence_not_through_db_1(self):
-        from models import PaymentMethod, Transaction
+        from models import PaymentMethod, Transaction, User
         import time
 
-        PaymentMethod.objects.create(_new_payment_method_token())
+        user, _ = User.objects.get_or_create(username="unit_test_user")
+        PaymentMethod.objects.create(payment_method_token = _new_payment_method_token(), user = user)
 
         ### purchase void 
 
@@ -905,10 +906,11 @@ class TestDjangoModels(unittest.TestCase):
 
 
     def test_sequence_not_through_db_2(self):
-        from models import PaymentMethod, Transaction
+        from models import PaymentMethod, Transaction, User
         import time
 
-        PaymentMethod.objects.create(_new_payment_method_token())
+        user, _ = User.objects.get_or_create(username="unit_test_user")
+        PaymentMethod.objects.create(payment_method_token = _new_payment_method_token(), user = user)
 
         ### authorize capture credit
 
@@ -951,10 +953,11 @@ class TestDjangoModels(unittest.TestCase):
 
 
     def test_sequence_through_db_1(self):
-        from models import PaymentMethod, Transaction
+        from models import PaymentMethod, Transaction, User
         import time
 
-        PaymentMethod.objects.create(_new_payment_method_token())
+        user, _ = User.objects.get_or_create(username="unit_test_user")
+        PaymentMethod.objects.create(payment_method_token = _new_payment_method_token(), user = user)
 
         ### purchase void 
 
@@ -988,10 +991,11 @@ class TestDjangoModels(unittest.TestCase):
 
 
     def test_sequence_through_db_2(self):
-        from models import PaymentMethod, Transaction
+        from models import PaymentMethod, Transaction, User
         import time
 
-        PaymentMethod.objects.create(_new_payment_method_token())
+        user, _ = User.objects.get_or_create(username="unit_test_user")
+        PaymentMethod.objects.create(payment_method_token = _new_payment_method_token(), user = user)
 
         ### authorize capture credit
 

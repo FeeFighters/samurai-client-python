@@ -1,10 +1,31 @@
+This is just in a usable state, installation may not be very convenient yet.
 
-django-authentication required. south supported
+To create a transparent redirect form.
 
-how the views work
+    import samurai_client_python.views
 
-constants
+    
+    
 
 how to use the trans_redir thing
 
+
+In settings.py:
+
+    import samurai_client_python.core as samurai
+
+    SAMURAI_CREDENTIALS = samurai.FeeFighters(merchant_key = [your merchant key], merchant_password = [your merchant password])
+    SAMURAI_SALT = # A randomly generated string
+    SAMURAI_NEWMETHOD_ERROR_REDIRECT = # name of URL you want to redirect to upon error creating a new mayment method
+    SAMURAI_NEWMETHOD_REDIRECT = # name of URL you want to redirect to upon success creating a new mayment method
+    SAMURAI_UPDATEMETHOD_ERROR_REDIRECT = # name of URL you want to redirect to upon error updating a mayment method
+    SAMURAI_UPDATEMETHOD_REDIRECT = # name of URL you want to redirect to upon success updating a mayment method
+
+
+How the views work:
+
+
+
 test_credentials.py
+
+    Django-authentication required. Django-South supported, migrations included.

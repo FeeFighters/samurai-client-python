@@ -1,14 +1,12 @@
-## Core
-
 If you're just interested in using the API in a basic form, you should use `samurai_client_python.core`. It will allow you to create Payment Methods and Transactions.
 
-### Transparent Redirect
+# Transparent Redirect
 
 First, you need to create a payment method, you first need to use something called a Transparent Redirect. This is a form you place on your website where your users enter all their credit card information. This form posts directly to FeeFighters, so, again, your server never sees the more sensitive parts. Feefighters will redirect your users to a url on your site (which you specify in a hidden field), with the payment_method_token of a newly created Payment Method in a GET variable. An example form, with all the necessary fields, can be found in the FeeFighters API documentation, or else you can look in [transparent_redirect.html.example](/FeeFighters/samurai-client-python/blob/master/transparent_redirect.html.example) in this repository.
 
-### PaymentMethod
+# PaymentMethod
 
-#### Create/Fetch
+## Create/Fetch
 
 Now, you can create a PaymentMethod to get the information:
 
@@ -53,7 +51,7 @@ If something went wrong, you should check `payment_method.errors`. For non-error
 
 You should also check `payment_method.is_sensitive_data_valid` (it may end up `False` without anything in the errors list). If it's false, it means something's wrong with either the credit card number or the cvv, in which case you should send the user back to the transparent redirect form. You should use the other fields in `payment_method` to pre-populate the form this time.
 
-#### Update
+## Update
 
 If you want to change some of the less sensitive data (name, address, card expiration date, etc) you can do it directly. Just set the fields you want to change, and call `update()`. Also note that one of the fields is called "custom". This is for arbitrary data you would like FeeFighters to associate with the PaymentMethod. This client represents this field as a dictionary, and will convert it to JSON. Example:
 
@@ -67,21 +65,21 @@ If you want to change some of the less sensitive data (name, address, card expir
 
 Numerical data can be set as number, they will be converted into strings before saving. The DateTime fields (time updated, etc) cannot be updated. You should only put strings into the JSON field. (You can also put the custom information into a hidden field in the Transparent Redirect form if you json encode it first.)
 
-#### Retain
+## Retain
 
 If you decide to that a PaymentMethod is good to continue using for the long run, you should retain it:
 
     payment_method.retain()
 
-#### Redact
+## Redact
 
 If you have a PaymentMethod that you don't plan to use again, you should redact it:
 
     payment_method.redact()
 
-### Transaction
+# Transaction
 
-#### Create/Fetch
+## Create/Fetch
 
 To start a series of transactions, first create a Transaction object. It requires a PaymentMethod object. Similarly to PaymentMethod, it also requires your credentials, which you can supply explicitly, or use an existing FeeFighters object for shorthand:
 
@@ -107,7 +105,7 @@ As with PaymentMethod objects, it will fetch by default, but you can choose to s
 
     success = transaction.fetch()
 
-#### Purchase
+## Purchase
 
 To initiate a one-step payment, create a new Transaction with a PaymentMethod, and call `purchase()`:
 
@@ -115,7 +113,7 @@ To initiate a one-step payment, create a new Transaction with a PaymentMethod, a
 
 `billing_reference` should be a number unique to this set of transactions. `customer_reference` should be unique to the user. After (Note that `transaction.amount` will be of type str.)
 
-#### Authorize/Capture
+## Authorize/Capture
 
 To initiate a two-step payment, create a new Transaction with a PaymentMethod, and call `authorize()`:
 
@@ -129,7 +127,7 @@ At a later time, you presumably will have the reference_id of the previous trans
 
 The `capture_transaction` will have the same `transaction_token` as the `authorize_transaction`, but a different `reference_id`.
 
-#### Void
+## Void
 
 For any existing transaction, you can simply call void() to cancel it (if done soon enough, talk to Fee Fighters for detals):
 
@@ -138,7 +136,7 @@ For any existing transaction, you can simply call void() to cancel it (if done s
 
 The `void_transaction` will have the same `transaction_token` as the `existing_transaction`, but a different `reference_id`.
 
-#### Void
+## Credit 
 
 For a transaction where a payment has been made, you can refund it partially or entirely by calling `credit()`:
 

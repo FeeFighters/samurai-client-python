@@ -59,7 +59,7 @@ This will create a PaymentMethod object based on the `payment_method_token` you 
 
 ...
 
-    payment_method.fetch()
+    success = payment_method.fetch()
 
 Finally, you will probably end up having to supply the credentials in several places in your code, so you can cut down on repetition by creating a `FeeFighters` object first:
 
@@ -137,10 +137,15 @@ As with PaymentMethod objects, it will fetch by default, but you can choose to s
 
 ...
 
-    transaction.fetch()
+    success = transaction.fetch()
 
-#### 
+#### Purchase
 
+To initiate a purchase, create a new Transaction with a PaymentMethod, and call `purchase()`:
+
+    success = transaction.purchase(20.5, "USD", billing_reference, customer_reference)
+
+`billing_reference` should be a number unique to this set of transactions. `customer_reference` should be unique to the user. After (Note that `transaction.amount` will be of type str.)
 
 
 ## Django

@@ -2,7 +2,7 @@ This is the python library for the [Samurai API](http://feefighters.com/samurai)
 
 (README in progress)
 
-## Installation
+## Installation ##
 
 This library currently isn't a proper Python module, so you will have to get the source. The main directory serves as a module. It also serves as a Django app, if you're interested in that.
 

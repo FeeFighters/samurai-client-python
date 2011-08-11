@@ -100,17 +100,23 @@ If you want to change some of the less sensitive data (name, address, card expir
 Numerical data can be set as number, they will be converted into strings before saving. The DateTime fields (time updated, etc) cannot be updated. You should only put strings into the JSON field. (You can also put the custom information into a hidden field in the Transparent Redirect form if you json encode it first.)
 
 #### Retain
-If you decide to use a payment_method
+
+If you decide to that a payment_method is good to continue using for the long run, you should retain it:
+
+    payment_method.retain()
 
 #### Redact
-If you decide you want to keep a
 
+If you have a payment_method that you don't plan to use again, you should redact it:
+
+    payment_method.redact()
 
 ### Transaction
 
 
 ## Django
 
+The Django models are similar to the core objects. One key difference to remember is that they don't fetch by default, you have to call .fetch() explicitly.
 
 In settings.py:
 

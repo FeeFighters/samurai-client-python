@@ -34,7 +34,7 @@ This library currently isn't a proper Python package, so you will have to get th
 
 If you're just interested in using the API in a basic form, you should use `samurai_client_python.core`. It will allow you to create Payment Methods and Transactions.
 
-First, you need to create a payment method, you first need to use something called a Transparent Redirect. This is a form you place on your website where your users enter all their credit card information. This form posts directly to FeeFighters, so, again, your server never sees the more sensitive parts. Feefighters will redirect your users to a url on your site (which you specify in a hidden field), with the payment_method_token of a newly created Payment Method in a GET variable. An example form, with all the necessary fields, can be found in the FeeFighters API documentation, or else you can look in [transparent_redirect.html.example](/transparent_redirect.html.example) in this repository.
+First, you need to create a payment method, you first need to use something called a Transparent Redirect. This is a form you place on your website where your users enter all their credit card information. This form posts directly to FeeFighters, so, again, your server never sees the more sensitive parts. Feefighters will redirect your users to a url on your site (which you specify in a hidden field), with the payment_method_token of a newly created Payment Method in a GET variable. An example form, with all the necessary fields, can be found in the FeeFighters API documentation, or else you can look in [transparent_redirect.html.example](transparent_redirect.html.example) in this repository.
 
 ## Django
 

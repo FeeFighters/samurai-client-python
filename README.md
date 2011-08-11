@@ -36,6 +36,36 @@ If you're just interested in using the API in a basic form, you should use `samu
 
 First, you need to create a payment method, you first need to use something called a Transparent Redirect. This is a form you place on your website where your users enter all their credit card information. This form posts directly to FeeFighters, so, again, your server never sees the more sensitive parts. Feefighters will redirect your users to a url on your site (which you specify in a hidden field), with the payment_method_token of a newly created Payment Method in a GET variable. An example form, with all the necessary fields, can be found in the FeeFighters API documentation, or else you can look in [transparent_redirect.html.example](/FeeFighters/samurai-client-python/blob/master/transparent_redirect.html.example) in this repository.
 
+Now, you can create a PaymentMethod to get the information:
+
+    from samurai_client_python.core import PaymentMethod
+
+    payment_method = PaymentMethod(merchant_key = merchant_key, merchant_password = merchant_password,
+        processor_token = processor_token, payment_method_token = payment_method_token)
+
+This will create a `payment_method` object based on the `payment_method_token` you pass in. You also have to have credentials for your merchant and processor ready. (If you don't have these, you should check with Fee Fighters.) This will fetch the information information from Fee Fighters right away. If you prefer to delay the fetch (since it hits the network and takes a second), you can supply the argument `do_fetch=False`, and call `fetch()` later:
+
+    from samurai_client_python.core import PaymentMethod
+
+
+    payment_method = PaymentMethod(merchant_key = merchant_key, merchant_password = merchant_password,
+        processor_token = processor_token, payment_method_token = payment_method_token, do_fetch = False)
+
+...
+
+    payment_method.fetch()
+
+Finally, you will probably end up having to supply the credentials in several places in your code, so you can cut down on repetition by creating a `FeeFighters` object first:
+
+    feefighters = FeeFighters(merchant_key = merchant_key, merchant_password = merchant_password, processor_token = processor_token)
+
+    payment_method = PaymentMethod(feefighters = feefighters, payment_method_token = payment_method_token)
+
+...
+
+    payment_method_2 = PaymentMethod(feefighters = feefighters, payment_method_token = payment_method_token_2)
+
+
 ## Django
 
 

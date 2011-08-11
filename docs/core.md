@@ -49,7 +49,7 @@ If something went wrong, you should check `payment_method.errors`. For non-error
     >>> print payment_method.info
     [{'context':'processor.transaction', 'key':'success', 'source':'samurai'}]
 
-You should also check `payment_method.is_sensitive_data_valid` (it may end up `False` without anything in the errors list). If it's false, it means something's wrong with either the credit card number or the cvv, in which case you should send the user back to the transparent redirect form. You should use the other fields in `payment_method` to pre-populate the form this time.
+You should also check `payment_method.is_sensitive_data_valid` (it may end up `False` without anything in the errors list). If it's false, it means something's wrong with either the credit card number or the cvv, in which case you should send the user back to the transparent redirect form. You should use the other fields in `payment_method` to pre-populate the form this time. It should also be noted that, unfortunately, the data, other than the credit card number and cvv being _malformed_, is not validated, until a transaction takes place. So be prepared to test for the first transaction returning False, and sending the user back to the transparent redirect form to try again.
 
 ## Update
 

@@ -1,11 +1,9 @@
-## Setup
+# Setup
 
 In settings.py:
 
-    import samurai_client_python.core as samurai
-
     SAMURAI_CREDENTIALS = samurai.FeeFighters(merchant_key = [your merchant key], merchant_password = [your merchant password])
-    SAMURAI_SALT = # A randomly generated string
+    SAMURAI_SALT = # A randomly generated string. You can use: User.objects.make_random_password(32, string.digits + string.letters)
     SAMURAI_NEWMETHOD_ERROR_REDIRECT = # name of URL you want to redirect to upon error creating a new mayment method
     SAMURAI_NEWMETHOD_REDIRECT = # name of URL you want to redirect to upon success creating a new mayment method
     SAMURAI_UPDATEMETHOD_ERROR_REDIRECT = # name of URL you want to redirect to upon error updating a mayment method
@@ -20,10 +18,13 @@ The Django models PaymentMethod and Transaction in `samurai_client_python.models
 * Every significant action saves to the database. For instance:
  * When the redirect comes back, it will call a view to save the resulting Payment Method, if it's valid. (more on this view below)
  * purchase, authorize, capture, void, and credit will all add the resulting transaction to the database if successful
+* calling full_clean() on a PaymentMethod will confirm that the payment method was set up to be attached to the logged in user (via a hashed version of their user ID added when the user submitted the data). This is mainly done by the supplied views, but you can also do this to check on a payment_method you create (even if you don't save).
 
 You shouldn't ever have to call `save()` on any of these models. Though, it is ok to delete them.
 
 ## Filtering
+
+Some useful ways to access the data:
 
 To get a particular payment method:
 
@@ -50,19 +51,59 @@ To get all transactions for a payment method:
 
 ## Transparent Redirect Form
 
+Again, this is the form that you create that will redirect your users directly to FeeFighters. First, you should put the form into a template. Unfortunately, we can't use Django forms for this because the names of the fields that FeeFighters expect contain brackets, so (as far as I know) there's no nice way to set them properly with Django. So we have to put them into a template manually. A working example form can be found at: [transparent_redirect.html.example](/FeeFighters/samurai-client-python/blob/master/transparent_redirect.html.example). You'll notice that it contains reference to something called 
 
-To create a transparent redirect form.
+To create an empty transparent redirect form:
 
-    import samurai_client_python.views
+    from samurai_client_python.views import get_transparent_redirect_form_initial
 
-    
-    
+    samurai_form = get_transparent_redirect_form_initial(request.user, settings.BASE_URL)
 
-how to use the trans_redir thing 
+    return render_to_response('template/path.html', {'samurai_form':samurai_form }, context_instance=RequestContext(request))
 
+(The name 'samurai_form' is just an example, which coincides with the example in transparent_redirect.html.example) This will fill in the necessary credentials. It will also add a hashed (using the salt you supply) version of the user's id. That way, when it comes back, the (supplied) view can verify that the recipient is the intended one before saving the payment method.
 
+Now, supposing you have an existing payment method, and you want to create a form for the user to update it (supposing the credit card number was bad). You can do the following:
 
-# Handling Redirects
+To create a transparent redirect form pre-populated from an existing Payment Method in the database:
+
+    from samurai_client_python.views import get_transparent_redirect_form_initial
+
+    old_payment_method = PaymentMethod.objects.get(payment_method_token = request.GET['old_payment_method_token'])
+    old_payment_method.fetch()
+
+    # the True is for "update". it will add a reference to this payment_method_token, so we know to replace it if the
+    # payment method resulting from this form is good data.
+    samurai_form = get_transparent_redirect_form_initial(request.user, settings.BASE_URL, old_payment_method, True) 
+
+Now, supposing the user entered malformed data, thus the token hasn't been saved. You can still get the token (see below for details). You can still use it to pre-populate the transparent redirect form:
+
+    # user required for security measure, don't save this, however
+    old_payment_method = PaymentMethod(payment_method_token = request.GET['old_payment_method_token'], user = request.user)
+    old_payment_method.fetch()
+    old_payment_method.full_clean() # handle the exception however you wish
+
+    # not passing it True for "update", however it is safe to do so if you want, for reasons laid out below:
+    samurai_form = get_transparent_redirect_form_initial(request.user, settings.BASE_URL, old_payment_method)
+
+    return render_to_response('template/path.html', {'samurai_form':samurai_form }, context_instance=RequestContext(request))
+   
+Finally, supposing you have an existing payment method that you want to update. You create a transparent redirect form, and the user puts in bad data. So you have a payment method that doesn't get saved because of the bad data, and yet it's set to replace the original payment method. In this case you can still pass it in as before:
+
+    bad_payment_method = PaymentMethod(payment_method_token = request.GET['bad_payment_method_token'], user = request.user)
+    bad_payment_method.fetch()
+    bad_payment_method.full_clean() # handle the exception however you wish
+
+    # passing in True for update. It will know to replace the older payment method.
+    samurai_form = get_transparent_redirect_form_initial(request.user, settings.BASE_URL, bad_payment_method, True)
+
+    return render_to_response('template/path.html', {'samurai_form':samurai_form }, context_instance=RequestContext(request))
+
+Passing in True for update is always safe to do. If the payment method is in the database, it will set the form up to update that payment method. If the payment method is not in the database, it will check to see if that payment method is a failed attempt at replacing another payment method (as in our example here). If so, it will set the form up to replace the same payment method it was replacing (and this can continue through indefinite failed attempts). If the payment method is neither in the database, nor set up to replace another payment method that is in the database, the update flag is ignored.
+
+Finally, note that this form will pass in error messages for fields with errors, and . At this time there's no convenent way to override the messages with your own error messages, but they're found at `samurai_form['field_name']['error']` if you wanted to try to replace them. There's also a `samurai_form['non_field_error']`.
+
+# Views/Redirects
 
 
 test_credentials.py

@@ -36,7 +36,7 @@ The module `samurai_client_python.core` and the file _transparent_redirect.html.
 
 # Django
 
-The modules `samurai_client_python.models`, `samurai_client_python.urls`, `samurai_client_python.views` make up a Django app which call on `samurai_client_python.core`. [Read More](/FeeFighters/samurai-client-python/blob/master/docs/core.md) (Though read first about Core, above)
+The modules `samurai_client_python.models`, `samurai_client_python.urls`, `samurai_client_python.views` make up a Django app which call on `samurai_client_python.core`. [Read More](/FeeFighters/samurai-client-python/blob/master/docs/django.md) (Though read first about Core, above)
 
 # Testing
 

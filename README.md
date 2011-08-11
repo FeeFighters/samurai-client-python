@@ -120,14 +120,26 @@ To start a series of transactions, first create a Transaction object. It require
     from samurai_client_python.core import Transaction
 
     transaction = Transaction(merchant_key = test_credentials.merchant_key, merchant_password = test_credentials.merchant_password,
-                processor_token = test_credentials.processor_token, payment_method = payment_method, do_fetch = False)
+                processor_token = test_credentials.processor_token, payment_method = payment_method)
 
 or
 
     transaction = Transaction(feefighters = feefighters, payment_method = payment_method, 
-        processor_token = processor_token, do_fetch = False)
+        processor_token = processor_token)
 
+You can also create a Transaction object from an existing transaction on FeeFighters' system, by feeding in a Reference ID:
 
+    transaction = Transaction(feefighters = feefighters, reference_id = reference_id)
+
+As with PaymentMethod objects, it will fetch by default, but you can choose to split it up:
+
+    transaction = Transaction(feefighters = feefighters, reference_id = transaction.reference_id)
+
+...
+
+    transaction.fetch()
+
+#### 
 
 
 

@@ -8,9 +8,9 @@ This is the python library for the [Samurai API](http://feefighters.com/samurai)
 
 This a set of credentials for making a credit card payment. It includes:
 
-* less-sensitive data that you will have access to (name, address, etc)
-* more sensitive data that you won't have access to (credit card number and cvv)
-* the state of the payment method (is data valid, is payment method redacted, etc).
+* __less sensitive data__ that you will have access to (name, address, etc)
+* __more sensitive data__ that you won't have access to (credit card number and cvv)
+* __the state of the payment method__ (is data valid, is payment method redacted, etc)
 
 Each Payment Method is identified by a `payment_method_token`.
 
@@ -18,11 +18,11 @@ Each Payment Method is identified by a `payment_method_token`.
 
 This is an action taken based on a payment method, and/or a previous transaction. There are a 5 different types of transactions.
 
-* _purchase_ - a complete payment
-* _authorize_ - the first part of a two-step payment
-* _capture_ - the second part of a two-step payment
-* _void_ - the cancelation of any previous payment
-* _credit_ - a partial or complete refund on an existing completed payment
+* __purchase__ - a complete payment
+* __authorize__ - the first part of a two-step payment
+* __capture__ - the second part of a two-step payment
+* __void__ - the cancelation of any previous payment
+* __credit__ - a partial or complete refund on an existing completed payment
 
 Each Transaction is identified by a `reference_id`, and each set of transactions that relate to each other (the capture for an earlier authorize, the void of an earlier purchase, etc) is identified by a `transaction_token`.
 

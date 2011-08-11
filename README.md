@@ -133,7 +133,7 @@ You can also create a Transaction object from an existing transaction on FeeFigh
 
 As with PaymentMethod objects, it will fetch by default, but you can choose to split it up:
 
-    transaction = Transaction(feefighters = feefighters, reference_id = transaction.reference_id)
+    transaction = Transaction(feefighters = feefighters, reference_id = reference_id, do_fetch = False)
 
 ...
 
@@ -141,12 +141,43 @@ As with PaymentMethod objects, it will fetch by default, but you can choose to s
 
 #### Purchase
 
-To initiate a purchase, create a new Transaction with a PaymentMethod, and call `purchase()`:
+To initiate a one-step payment, create a new Transaction with a PaymentMethod, and call `purchase()`:
 
-    success = transaction.purchase(20.5, "USD", billing_reference, customer_reference)
+    success = transaction.purchase(20, "USD", billing_reference, customer_reference)
 
 `billing_reference` should be a number unique to this set of transactions. `customer_reference` should be unique to the user. After (Note that `transaction.amount` will be of type str.)
 
+#### Authorize/Capture
+
+To initiate a two-step payment, create a new Transaction with a PaymentMethod, and call `authorize()`:
+
+    success = transaction.authorize(20, "USD", billing_reference, customer_reference)
+    # save transaction.reference_id somewhere
+
+At a later time, you presumably will have the reference_id of the previous transaction saved. Use that to create a new transaction, and then call `capture()`
+
+    authorize_transaction = Transaction(feefighters = feefighters, reference_id = reference_id)
+    capture_transaction = authorize_transaction.capture(20) # you can generally capture up to as much money as you authorized for
+
+The `capture_transaction` will have the same `transaction_token` as the `authorize_transaction`, but a different `reference_id`.
+
+#### Void
+
+For any existing transaction, you can simply call void() to cancel it (if done soon enough, talk to Fee Fighters for detals):
+
+    existing_transaction = Transaction(feefighters = feefighters, reference_id = reference_id)
+    void_transaction = existing_transaction.void()
+
+The `void_transaction` will have the same `transaction_token` as the `existing_transaction`, but a different `reference_id`.
+
+#### Void
+
+For a transaction where a payment has been made, you can refund it partially or entirely by calling `credit()`:
+
+    existing_transaction = Transaction(feefighters = feefighters, reference_id = reference_id)
+    credit_transaction = existing_transaction.void()
+
+The `credit_transaction` will have the same `transaction_token` as the `existing_transaction`, but a different `reference_id`.
 
 ## Django
 

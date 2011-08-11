@@ -28,9 +28,7 @@ Each Transaction is identified by a `reference_id`, and each set of transactions
 
 ## Installation
 
-This library currently isn't a proper Python module, so you will have to get the source. The main directory serves as a module. It also serves as a Django app, if you're interested in that.
-
-You should rename the directory to something like samurai_client_python so you can import it.
+This library currently isn't a proper Python package, so you will have to get the source. The main directory serves as a module, though you should rename it to something like python_samurai_client, since dashes aren't valid for module names. The directory also works as a Django application, if you would like to use it for that.
 
 ## Core
 

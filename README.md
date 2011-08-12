@@ -40,6 +40,8 @@ The modules `samurai_client_python.models`, `samurai_client_python.urls`, `samur
 
 # Testing
 
+This is if you want to run samurai_client_python test suite. It's good to test the code, and also to test if anything is wrong or just changed with the samurai API. If you suddenly start having unexplainable problems, this might be a good place to start.
+
 ## Credentials
 
 If you want any of the tests to pass, you will need to create a file called test_credentials.py. Look at test_credentials.py.example for what to put in. __Do not__ put credentials from real merchants or processors into this file. You should get test credentials from FeeFighters.

@@ -42,8 +42,22 @@ The modules `samurai_client_python.models`, `samurai_client_python.urls`, `samur
 
 ## Credentials
 
-If you want any of the tests to pass, you will need to create a file called test_credentials.py
+If you want any of the tests to pass, you will need to create a file called test_credentials.py. Look at test_credentials.py.example for what to put in. __Do not__ put credentials from real merchants or processors into this file. You should get test credentials from FeeFighters.
 
 ## Django
 
 If you don't have this properly configured as part of Django, the Django tests will not pass.
+
+## Running
+
+Testing only core.py:
+
+    python test.py
+
+This will run every test, and fail the Django ones:
+
+Testing everything:
+
+    ./manage.py test samurai_client_python
+
+This requires that you have samurai_client_python in your INSTALLED_APPS.

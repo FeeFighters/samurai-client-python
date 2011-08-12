@@ -1,7 +1,5 @@
 This is the python library for the [Samurai API](http://feefighters.com/samurai) from [Fee Fighters](http://feefighters.com). It allows you easily store customer payment information, and create transactions, without having to ever worry about having their credit card number cross your server.
 
-(README in progress)
-
 # Overview
 
 ## Payment Method

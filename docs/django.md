@@ -1,6 +1,11 @@
 # Setup
 
+* Django-South is supported, with migrations included.
+* Django-authentication is required.
+
 In settings.py:
+
+    import samurai_client_python.core as samurai
 
     SAMURAI_CREDENTIALS = samurai.FeeFighters(merchant_key = [your merchant key], merchant_password = [your merchant password])
     SAMURAI_SALT = # A randomly generated string. You can use: User.objects.make_random_password(32, string.digits + string.letters)
@@ -8,6 +13,14 @@ In settings.py:
     SAMURAI_NEWMETHOD_REDIRECT = # name of URL you want to redirect to upon success creating a new mayment method
     SAMURAI_UPDATEMETHOD_ERROR_REDIRECT = # name of URL you want to redirect to upon error updating a mayment method
     SAMURAI_UPDATEMETHOD_REDIRECT = # name of URL you want to redirect to upon success updating a mayment method
+
+In urls.py:
+
+You need to route the samurai views to any base URL of your choosing:
+
+    (r'^payment/', include('samurai_client_python.urls')),
+
+In this example, we will route it to "/payment/...". The app will take care of the rest.
 
 # Models
 
@@ -28,7 +41,9 @@ Some useful ways to access the data:
 
 To get a particular payment method:
 
-    PaymentMethod.objects.get(payment_method_token = payment_method_token)
+    PaymentMethod.objects.get(payment_method_token = payment_method_token, user = request.user)
+
+Note that you should probably always pass the user into the query, to prevent somebody from hijacking somebody else's PaymentMethod.
 
 To get a particular transaction:
 
@@ -51,7 +66,7 @@ To get all transactions for a payment method:
 
 ## Transparent Redirect Form
 
-Again, this is the form that you create that will redirect your users directly to FeeFighters. First, you should put the form into a template. Unfortunately, we can't use Django forms for this because the names of the fields that FeeFighters expect contain brackets, so (as far as I know) there's no nice way to set them properly with Django. So we have to put them into a template manually. A working example form can be found at: [transparent_redirect.html.example](/FeeFighters/samurai-client-python/blob/master/transparent_redirect.html.example). You'll notice that it contains reference to something called 
+Again, this is the form that you create that will redirect your users directly to FeeFighters. First, you should put the form into a template. Unfortunately, we can't use Django forms for this because the names of the fields that FeeFighters expect contain brackets, so (as far as I know) there's no nice way to set them properly with Django. So we have to put them into a template manually. A working example form can be found at: [transparent_redirect.html.example](/FeeFighters/samurai-client-python/blob/master/transparent_redirect.html.example). You'll notice that it contains reference to something called `samurai_form`.
 
 To create an empty transparent redirect form:
 
@@ -103,10 +118,14 @@ Passing in True for update is always safe to do. If the payment method is in the
 
 Finally, note that this form will pass in error messages for fields with errors, and . At this time there's no convenent way to override the messages with your own error messages, but they're found at `samurai_form['field_name']['error']` if you wanted to try to replace them. There's also a `samurai_form['non_field_error']`.
 
-# Views/Redirects
+# Handling Redirects
 
+When a user is redirected back from FeeFighters, they are sent to the URL we send them. The transparent redirect form we set up (above) will tell FeeFighters to send the user to an appropriate view that is included as part of this app. This view will verify that the credit card number and cvv were not malformed (though it can't verify that the numbers are correct before making a transaction).
 
-test_credentials.py
+If this is a new payment method, it will create the new `PaymentMethod` to the database, retain it, and forward the user once again, to SAMURAI_NEWMETHOD_REDIRECT if the data looks good and there are no errros, and SAMURAI_NEWMETHOD_ERROR_REDIRECT if there are problems.
 
-    Django-authentication required. Django-South supported, migrations included.
+If this is an updated payment method (get_transparent_redirect_form_initial was called with update=True, and the payment method was set up to replace an existing payment method in the database), it will create the new `PaymentMethod`, retain it, redact the `PaymentMethod` it is replacing, and delete it from the database.
 
+The views that these will forward to are up to you to create. The `payment_method_token` will be passed in as a GET variable. You may choose to have the UPDATE and NEW views point to the same place. You may want to create a transaction and peform a purchase. If transaction.purchase() returns False, you may want to send the user back to the form again, and set it up prepopulate the form and update the old payment method. See the above examples.
+
+For the ERROR views, you may want to send the user back to the old form, prepopulated as well. You should create a new PaymentMethod object (without saving it), call full_clean() to make sure it was created by the correct user, and pass it to transparent_redirect_form_initial. See the above examples.

@@ -338,17 +338,19 @@ class Transaction(RemoteObject):
         self.info = []
 
     def _transaction_request(self, request_name, url_parameter, payload = {}, field_names = None):
+        success = True
         if self._remote_object_request(request_name, url_parameter, payload, field_names):
-            self.transaction_type = string.lower(self.transaction_type) # so we don't get tripped up remembering "Purchase" vs "purchase"
             self.payment_method = PaymentMethod(payment_method_initial = {'payment_method':self.payment_method}, merchant_key = self._merchant_key,
                 merchant_password = self._merchant_password)
             if self.payment_method.errors:
                 self.errors.append({"error":{"errors":[{"context": "client", "source": "client", "key": "errors_in_returned_payment_method" }], "info":[]}})
-                return False
-            else:
-                return True
+                success = False
         else:
-            return False
+            success = False
+
+        if self.transaction_type:
+            self.transaction_type = self.transaction_type.lower() # so we don't get tripped up remembering "Purchase" vs "purchase"
+        return success
 
     def _add_json_fields(self, out_data):
         for field in ['custom', 'descriptor']:

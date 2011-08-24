@@ -126,6 +126,8 @@ class Transaction(models.Model, RemoteObject):
             return None
         else:
             self._set_payment_method_last_transaction_error(False)
+            new_transaction._core_remote_object = new_transaction_core
+            new_transaction._get_fields_from_core()
             return new_transaction
 
     def _set_payment_method_last_transaction_error(self, error):

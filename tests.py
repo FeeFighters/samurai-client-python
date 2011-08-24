@@ -67,7 +67,7 @@ class TestTransparentRedirect(unittest.TestCase):
         request = REQUESTS["transparent_redirect"]
 
         redir_url, _ = _transparent_redirect( initial_test_data )
-        self.assertEqual("www.example.com", redir_url)
+        self.assertEqual("localhost", redir_url)
 
 
 class TestXMLTODict(unittest.TestCase):
@@ -586,7 +586,7 @@ class TestTransactionMethods(unittest.TestCase):
         for attr_name, var_val in expected_after.iteritems():
             self.assertEqual(getattr(transaction, attr_name), var_val)
 
-        expected_info = {'source':'processor', 'context':'gateway.transaction', 'key':'success'}
+        expected_info = {'source':'processor', 'context':'processor.transaction', 'key':'success'}
         self.assertTrue(expected_info in transaction.info, str(expected_info) + " not in " + str(transaction.info))
 
         # harder-to-test-for attributes
@@ -686,7 +686,7 @@ class TestTransactionMethods(unittest.TestCase):
 
             self.assertTrue(t.populated)
 
-            expected_info = {'source':'processor', 'context':'gateway.transaction', 'key':'success'}
+            expected_info = {'source':'processor', 'context':'processor.transaction', 'key':'success'}
             self.assertTrue(expected_info in transaction.info, str(expected_info) + " not in " + str(transaction.info))
             self.assertEqual(t.errors, [])
 
@@ -734,7 +734,7 @@ class TestTransactionMethods(unittest.TestCase):
 
             self.assertTrue(t.populated)
 
-            expected_info = {'source':'processor', 'context':'gateway.transaction', 'key':'success'}
+            expected_info = {'source':'processor', 'context':'processor.transaction', 'key':'success'}
             self.assertTrue(expected_info in transaction.info, str(expected_info) + " not in " + str(transaction.info))
 
             self.assertEqual(t.transaction_type, t_type, t.errors)
@@ -811,13 +811,15 @@ class TestTransactionMethods(unittest.TestCase):
         self.assertEquals(transaction.transaction_type, "purchase")
         credit_transaction = transaction.credit(10)
 
-        self.assertEquals(credit_transaction.errors, [])
+        self.assertEquals(credit_transaction.errors, [{'source': 'processor', 'context': u'processor.transaction', 'key': u'credit_criteria_invalid'}])
         self.assertEquals(credit_transaction.transaction_type, "credit")
 
         self.assertEquals(credit_transaction.amount, "10.0")
 
         self.assertTrue(transaction.fetch())
         self.assertEquals(transaction.amount, "20.5")
+        self.assertEquals(transaction.errors, [])
+
 
     def test_use_unfetched_transaction(self):
         "Trying the sequence of events with all copied transactions, without calling fetch explicitly"
@@ -861,7 +863,7 @@ class TestTransactionMethods(unittest.TestCase):
         # copy ref_id, don't fetch, credit 
         capture_transaction = Transaction(feefighters = feefighters, reference_id=capture_transaction.reference_id, do_fetch= False)
         credit_transaction = capture_transaction.credit(10)
-        self.assertEqual(credit_transaction.errors, [])
+        self.assertEqual(credit_transaction.errors, [{'source': 'processor', 'context': u'processor.transaction', 'key': u'credit_criteria_invalid'}])
         self.assertEqual(credit_transaction.transaction_type, "credit")
 
 
@@ -932,7 +934,7 @@ class TestDjangoModels(unittest.TestCase):
         self.assertTrue( Transaction.objects.all().count() == 2 )
 
         credit_txn = capture_txn.credit(10)
-        self.assertTrue( credit_txn.errors == [] )
+        self.assertTrue( credit_txn.errors == [{'source': 'processor', 'context': u'processor.transaction', 'key': u'credit_criteria_invalid'}] )
         self.assertTrue( credit_txn.transaction_type == "credit" )
         self.assertTrue( Transaction.objects.all().count() == 3 )
 
@@ -946,7 +948,8 @@ class TestDjangoModels(unittest.TestCase):
         self.assertTrue( cat_db.fetch() )
 
         crt_db = Transaction.objects.get(transaction_type = "credit", transaction_token = t.transaction_token)
-        self.assertTrue( crt_db.fetch() )
+        self.assertFalse( crt_db.fetch() )
+        self.assertTrue( crt_db.errors == [{'source': 'processor', 'context': u'processor.transaction', 'key': u'credit_criteria_invalid'}])
 
         self.assertTrue( set([t.transaction_type for t in Transaction.objects.all()]) == set(["credit", "authorize", "capture"]) )
 
@@ -1021,7 +1024,7 @@ class TestDjangoModels(unittest.TestCase):
         capture_txn = Transaction.objects.get(reference_id = capture_txn.reference_id)
 
         credit_txn = capture_txn.credit(10)
-        self.assertTrue( credit_txn.errors == [] )
+        self.assertTrue( credit_txn.errors == [{'source': 'processor', 'context': u'processor.transaction', 'key': u'credit_criteria_invalid'}], credit_txn.errors)
         self.assertTrue( credit_txn.transaction_type == "credit" )
         self.assertTrue( Transaction.objects.all().count() == 3 )
 
@@ -1035,7 +1038,8 @@ class TestDjangoModels(unittest.TestCase):
         self.assertTrue( cat_db.fetch() )
 
         crt_db = Transaction.objects.get(transaction_type = "credit", transaction_token = t.transaction_token)
-        self.assertTrue( crt_db.fetch() )
+        self.assertFalse( crt_db.fetch() )
+        self.assertTrue( crt_db.errors == [{'source': 'processor', 'context': u'processor.transaction', 'key': u'credit_criteria_invalid'}])
 
         self.assertTrue( set([t.transaction_type for t in Transaction.objects.all()]) == set(["credit", "authorize", "capture"]) )
 

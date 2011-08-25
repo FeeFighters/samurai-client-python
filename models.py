@@ -18,6 +18,7 @@ class PaymentMethod(models.Model, RemoteObject):
     payment_method_token = models.CharField(max_length=100, editable=False, unique=True)
     user = models.ForeignKey(User, editable=False)
     last_transaction_error = models.BooleanField(default=False) # stores whether the last transaction was an error
+    disabled = models.BooleanField(default=False) 
 
     def __init__(self, *args, **kwargs):
         super(PaymentMethod, self).__init__(*args, **kwargs)

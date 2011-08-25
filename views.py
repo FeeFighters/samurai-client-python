@@ -31,7 +31,8 @@ def payment_method_redirect(request, update ):
         if update:
             old_payment_method = PaymentMethod.objects.get(payment_method_token = new_payment_method.custom['django_prev_payment_method_token'])
             old_payment_method.redact()
-            old_payment_method.delete()
+            old_payment_method.disabled = True
+            old_payment_method.save()
 
         new_payment_method.retain()
         new_payment_method.save()

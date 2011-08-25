@@ -85,6 +85,11 @@ class Transaction(models.Model, RemoteObject):
     reference_id = models.CharField(unique = True, max_length=100, editable=False)
     payment_method = models.ForeignKey(PaymentMethod, editable=False)
     transaction_type = models.CharField(max_length=20, editable=False)
+#    user = models.ForeignKey(User, null = True, editable=False)
+#    amount = models.CharField(max_length=10, editable=False, blank = True, default="") # null and blank to avoid migration
+#    currency_code = models.CharField(max_length=10, editable=False, blank = True, default="")
+#    created_at = models.DateTimeField(editable=False, null = True, blank = True, default="")
+#    processor_success = models.NullBooleanField(editable=False, null = True, blank = True, default=None)
 
     def __init__(self, *args, **kwargs):
         super(Transaction, self).__init__(*args, **kwargs)

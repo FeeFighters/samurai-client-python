@@ -85,11 +85,10 @@ class Transaction(models.Model, RemoteObject):
     reference_id = models.CharField(unique = True, max_length=100, editable=False)
     payment_method = models.ForeignKey(PaymentMethod, editable=False)
     transaction_type = models.CharField(max_length=20, editable=False)
-#    user = models.ForeignKey(User, null = True, editable=False)
-#    amount = models.CharField(max_length=10, editable=False, blank = True, default="") # null and blank to avoid migration
-#    currency_code = models.CharField(max_length=10, editable=False, blank = True, default="")
-#    created_at = models.DateTimeField(editable=False, null = True, blank = True, default="")
-#    processor_success = models.NullBooleanField(editable=False, null = True, blank = True, default=None)
+    amount = models.CharField(max_length=10, editable=False, blank = True, default="") # null and blank to avoid migration
+    currency_code = models.CharField(max_length=10, editable=False, blank = True, default="")
+    created_at = models.DateTimeField(editable=False, null = True, blank = True, default=None)
+    processor_success = models.NullBooleanField(editable=False, null = True, blank = True, default=None)
 
     def __init__(self, *args, **kwargs):
         super(Transaction, self).__init__(*args, **kwargs)
@@ -104,7 +103,9 @@ class Transaction(models.Model, RemoteObject):
                 reference_id = self.reference_id, processor_token = self.processor_token, do_fetch = False)
 
         # exclude here since overwriting before fetch could wipe out what's from the DB
-        self._get_fields_from_core(exclude = ["transaction_token", "reference_id", "transaction_type"])
+        # all we want are things that aren't in the database. Even if it's a new transaction and the values are None, we want the attributes there.
+        self._get_fields_from_core(exclude = ["transaction_token", "reference_id", "transaction_type", "amount", "currency_code",
+            "created_at", "processor_success"])
         self._set_fields_into_core()
 
     def _get_fields_from_core(self, exclude = []):
@@ -123,7 +124,9 @@ class Transaction(models.Model, RemoteObject):
 
     def _save_new_transaction(self, new_transaction_core):
         new_transaction = Transaction(transaction_token = new_transaction_core.transaction_token, reference_id = new_transaction_core.reference_id,
-            payment_method = self.payment_method, transaction_type = new_transaction_core.transaction_type) 
+            payment_method = self.payment_method, transaction_type = new_transaction_core.transaction_type, amount = new_transaction_core.amount,
+            currency_code = new_transaction_core.currency_code, created_at = new_transaction_core.created_at,
+            processor_success = new_transaction_core.processor_success )
         try:
             new_transaction.full_clean()
             new_transaction.save()

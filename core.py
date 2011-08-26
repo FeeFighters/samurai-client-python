@@ -346,6 +346,8 @@ class Transaction(RemoteObject):
                 self.errors.append({"error":{"errors":[{"context": "client", "source": "client", "key": "errors_in_returned_payment_method" }], "info":[]}})
                 success = False
         else:
+            self.payment_method = PaymentMethod(payment_method_initial = {'payment_method':self.payment_method}, merchant_key = self._merchant_key,
+                merchant_password = self._merchant_password)
             success = False
 
         if self.transaction_type:

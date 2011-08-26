@@ -153,7 +153,8 @@ class Transaction(models.Model, RemoteObject):
         except:
             self._set_payment_method_last_transaction_error(True)
             return False
-        self.save()
+        if self.reference_id != "":
+            self.save()
         self._set_payment_method_last_transaction_error(not result)
         return result
 

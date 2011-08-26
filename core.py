@@ -162,7 +162,7 @@ class RemoteObject(object):
         if "error" not in in_data and self.head_xml_element_name not in in_data:
             in_data = {'error': {'errors':[{'source': 'client', 'context': 'client', 'key': 'wrong_head_element'}], 'info':[]}}
 
-        # check if we have all expected fields. if not, assum the whole thing is a wash.
+        # check if we have all expected fields. if not, assume the whole thing is a wash.
         elif self.head_xml_element_name in in_data: # if this is a response with <error> as the head element, we won't expect these fields
             for field in field_names:
                 if field not in in_data[self.head_xml_element_name]:
@@ -340,14 +340,16 @@ class Transaction(RemoteObject):
     def _transaction_request(self, request_name, url_parameter, payload = {}, field_names = None):
         success = True
         if self._remote_object_request(request_name, url_parameter, payload, field_names):
-            self.payment_method = PaymentMethod(payment_method_initial = {'payment_method':self.payment_method}, merchant_key = self._merchant_key,
-                merchant_password = self._merchant_password)
+            if type(self.payment_method) == dict:
+                self.payment_method = PaymentMethod(payment_method_initial = {'payment_method':self.payment_method}, merchant_key = self._merchant_key,
+                    merchant_password = self._merchant_password)
             if self.payment_method.errors:
                 self.errors.append({"error":{"errors":[{"context": "client", "source": "client", "key": "errors_in_returned_payment_method" }], "info":[]}})
                 success = False
         else:
-            self.payment_method = PaymentMethod(payment_method_initial = {'payment_method':self.payment_method}, merchant_key = self._merchant_key,
-                merchant_password = self._merchant_password)
+            if type(self.payment_method) == dict:
+                self.payment_method = PaymentMethod(payment_method_initial = {'payment_method':self.payment_method}, merchant_key = self._merchant_key,
+                    merchant_password = self._merchant_password)
             success = False
 
         if self.transaction_type:

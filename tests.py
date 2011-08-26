@@ -614,7 +614,35 @@ class TestTransactionMethods(unittest.TestCase):
         self.assertEqual(transaction.purchase(20.5, "USD", "12345", "321"), False)
 
         self.assertTrue(bool(transaction.errors))
-        
+        self.assertEqual(type(transaction.payment_method), PaymentMethod)
+
+
+    def test_bad_purchase_duplicate(self): # this was based on a particular error I found.
+        payment_method_token = _new_payment_method_token()
+        payment_method = PaymentMethod(feefighters = feefighters, payment_method_token = payment_method_token, do_fetch = False)
+
+        billing_reference = "b" + str(int(time.time()))
+        customer_reference = "c" + str(int(time.time()))
+
+
+        transaction = Transaction(feefighters = feefighters, payment_method = payment_method, processor_token = test_credentials.processor_token, do_fetch= False)
+        transaction.custom = {'a':'b'}
+        transaction.descriptor = {'c':'d'}
+        self.assertEqual(transaction.purchase(20.5, "USD", billing_reference, customer_reference), True)
+        self.assertEqual(type(transaction.payment_method), PaymentMethod) # make sure we don't get dicts in the payment method after bad purchases 
+
+        transaction = Transaction(feefighters = feefighters, payment_method = payment_method, processor_token = test_credentials.processor_token, do_fetch= False)
+        transaction.custom = {'a':'b'}
+        transaction.descriptor = {'c':'d'}
+        self.assertEqual(transaction.purchase(20.5, "USD", billing_reference, customer_reference), False)
+        self.assertEqual(type(transaction.payment_method), PaymentMethod) # make sure we don't get dicts in the payment method after bad purchases 
+
+        transaction = Transaction(feefighters = feefighters, payment_method = payment_method, processor_token = test_credentials.processor_token, do_fetch= False)
+        transaction.custom = {'a':'b'}
+        transaction.descriptor = {'c':'d'}
+        self.assertEqual(transaction.purchase(20.5, "USD", billing_reference + "0", customer_reference + "0"), True)
+        self.assertEqual(type(transaction.payment_method), PaymentMethod) # make sure we don't get dicts in the payment method after bad purchases 
+
     def test_fetch(self):
         payment_method_token = _new_payment_method_token()
 

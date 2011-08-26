@@ -41,7 +41,7 @@ Some useful ways to access the data:
 
 To get a particular payment method:
 
-    PaymentMethod.objects.get(payment_method_token = payment_method_token, user = request.user)
+    PaymentMethod.objects.get(payment_method_token = payment_method_token, user = request.user, disabled = False)
 
 Note that you should probably always pass the user into the query, to prevent somebody from hijacking somebody else's PaymentMethod.
 
@@ -84,12 +84,13 @@ To create a transparent redirect form pre-populated from an existing Payment Met
 
     from samurai_client_python.views import get_transparent_redirect_form_initial
 
-    old_payment_method = PaymentMethod.objects.get(payment_method_token = request.GET['old_payment_method_token'])
-    old_payment_method.fetch()
+    if PaymentMethod.objects.filter(payment_method_token = request.GET['old_payment_method_token'], disabled = False).exists():
+        old_payment_method = PaymentMethod.objects.get(payment_method_token = request.GET['old_payment_method_token'], disabled = False)
+        old_payment_method.fetch()
 
-    # the True is for "update". it will add a reference to this payment_method_token, so we know to replace it if the
-    # payment method resulting from this form is good data.
-    samurai_form = get_transparent_redirect_form_initial(request.user, settings.BASE_URL, old_payment_method, True) 
+        # the True is for "update". it will add a reference to this payment_method_token, so we know to replace it if the
+        # payment method resulting from this form is good data.
+        samurai_form = get_transparent_redirect_form_initial(request.user, settings.BASE_URL, old_payment_method, True) 
 
 Now, supposing the user entered malformed data, thus the token hasn't been saved. You can still get the token (see below for details). You can still use it to pre-populate the transparent redirect form:
 

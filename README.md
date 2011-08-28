@@ -19,7 +19,7 @@ This is an action taken based on a payment method, and/or a previous transaction
 * __purchase__ - a complete payment
 * __authorize__ - the first part of a two-step payment
 * __capture__ - the second part of a two-step payment
-* __void__ - the cancelation of any previous payment
+* __void__ - the cancellation of any previous payment
 * __credit__ - a partial or complete refund on an existing completed payment
 
 Each Transaction is identified by a `reference_id`, and each set of transactions that relate to each other (the capture for an earlier authorize, the void of an earlier purchase, etc) is identified by a `transaction_token`.

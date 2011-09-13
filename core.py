@@ -4,17 +4,17 @@ from datetime import datetime
 from xml.dom.minidom import parseString as parseStringToXML, Node, Document
 
 REQUESTS = {
-    "transparent_redirect":     ("GET",     "https://samurai.feefighters.com/v1/payment_methods"),       # just for testing
-    "fetch_payment_method":     ("GET",     "https://samurai.feefighters.com/v1/payment_methods/%s.xml"),
-    "update_payment_method":    ("PUT",     "https://samurai.feefighters.com/v1/payment_methods/%s.xml"),
-    "retain_payment_method":    ("POST",    "https://samurai.feefighters.com/v1/payment_methods/%s/retain.xml"),
-    "redact_payment_method":    ("POST",    "https://samurai.feefighters.com/v1/payment_methods/%s/redact.xml"),
-    "purchase_transaction":     ("POST",    "https://samurai.feefighters.com/v1/processors/%s/purchase.xml"),
-    "authorize_transaction":    ("POST",    "https://samurai.feefighters.com/v1/processors/%s/authorize.xml"),
-    "capture_transaction":      ("POST",    "https://samurai.feefighters.com/v1/transactions/%s/capture.xml"),
-    "void_transaction":         ("POST",    "https://samurai.feefighters.com/v1/transactions/%s/void.xml"),
-    "credit_transaction":      ("POST",    "https://samurai.feefighters.com/v1/transactions/%s/credit.xml"),
-    "fetch_transaction":        ("GET",     "https://samurai.feefighters.com/v1/transactions/%s.xml"),
+    "transparent_redirect":     ("GET",     "https://api.samurai.feefighters.com/v1/payment_methods"),       # just for testing
+    "fetch_payment_method":     ("GET",     "https://api.samurai.feefighters.com/v1/payment_methods/%s.xml"),
+    "update_payment_method":    ("PUT",     "https://api.samurai.feefighters.com/v1/payment_methods/%s.xml"),
+    "retain_payment_method":    ("POST",    "https://api.samurai.feefighters.com/v1/payment_methods/%s/retain.xml"),
+    "redact_payment_method":    ("POST",    "https://api.samurai.feefighters.com/v1/payment_methods/%s/redact.xml"),
+    "purchase_transaction":     ("POST",    "https://api.samurai.feefighters.com/v1/processors/%s/purchase.xml"),
+    "authorize_transaction":    ("POST",    "https://api.samurai.feefighters.com/v1/processors/%s/authorize.xml"),
+    "capture_transaction":      ("POST",    "https://api.samurai.feefighters.com/v1/transactions/%s/capture.xml"),
+    "void_transaction":         ("POST",    "https://api.samurai.feefighters.com/v1/transactions/%s/void.xml"),
+    "credit_transaction":      ("POST",    "https://api.samurai.feefighters.com/v1/transactions/%s/credit.xml"),
+    "fetch_transaction":        ("GET",     "https://api.samurai.feefighters.com/v1/transactions/%s.xml"),
 }
 
 

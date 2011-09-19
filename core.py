@@ -4,7 +4,7 @@ from datetime import datetime
 from xml.dom.minidom import parseString as parseStringToXML, Node, Document
 
 REQUESTS = {
-    "transparent_redirect":     ("GET",     "https://api.samurai.feefighters.com/v1/payment_methods"),       # just for testing
+    "transparent_redirect":     ("POST",     "https://api.samurai.feefighters.com/v1/payment_methods"),       # just for testing
     "fetch_payment_method":     ("GET",     "https://api.samurai.feefighters.com/v1/payment_methods/%s.xml"),
     "update_payment_method":    ("PUT",     "https://api.samurai.feefighters.com/v1/payment_methods/%s.xml"),
     "retain_payment_method":    ("POST",    "https://api.samurai.feefighters.com/v1/payment_methods/%s/retain.xml"),

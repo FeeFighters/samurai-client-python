@@ -3,6 +3,14 @@ from core import *
 from core import _xml_to_dict, _dict_to_xml, _request
 import time
 
+# We need a handler that doesn't follow redirects, 
+# so we can grab the Location header and return it
+class NoRedirectHTTPRedirectHandler(urllib2.HTTPRedirectHandler):
+    def http_error_302(self, req, fp, code, msg, headers):
+        return headers['Location']
+    http_error_301 = http_error_303 = http_error_307 = http_error_302
+
+
 def _transparent_redirect(data):
     "for testing purposes, simulate the web form that posts directly to FeeFighters'"
 
@@ -10,17 +18,20 @@ def _transparent_redirect(data):
     method = request[0]
     url = request[1] 
 
-    opener = urllib2.build_opener( urllib2.HTTPCookieProcessor() )
-    urllib2.install_opener( opener )
-    params = urllib.urlencode( data )
+    # URL-Encode the data
+    params = urllib.urlencode(data)
 
-    f = opener.open( url,  params )
+    # Setup a HTTPS handler with debugging enabled (or not)
+    request_debugging = 0
 
-    data = f.read()
+    # Build the opener, using our special NoRedirect handler + HTTPS handler
+    opener = urllib2.build_opener(NoRedirectHTTPRedirectHandler, urllib2.HTTPSHandler(debuglevel=request_debugging))
+    # make the request, and just store the result in data 
+    # because our NoRedirect handler simply returns the Location string
+    data = opener.open(url, params)
 
-    f.close()
-
-    return urlparse.urlparse(f.url).netloc, urlparse.urlparse(f.url).query.split("=")[1]
+    # Parse the Location redirect string into its parts, and return them
+    return urlparse.urlparse(data).netloc, urlparse.urlparse(data).query.split("=")[1]
 
 def _new_payment_method_token():
     # set up the payment method for a bunch of tests here
@@ -43,6 +54,7 @@ initial_test_data = {
     "credit_card[cvv]":"000",
     "credit_card[expiry_month]":"1",
     "credit_card[expiry_year]":"2012",
+    "sandbox":"true"
 }
    
 

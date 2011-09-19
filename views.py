@@ -69,7 +69,7 @@ def get_transparent_redirect_form_initial(user, base_url, payment_method = None,
         init["custom"]['value'] = dict(init["custom"]['value']) # make a copy so I don't change the data in the payment_method
 
         if update:
-            init["payment_method_token"] = payment_method.payment_method_token # making sure that the blank items (or "*****"'d secret items) in the next generated PM are replaced with the values from this PM
+            init["payment_method_token"] = {'value': payment_method.payment_method_token} # making sure that the blank items (or "*****"'d secret items) in the next generated PM are replaced with the values from this PM
             if PaymentMethod.objects.filter(payment_method_token = payment_method.payment_method_token, user = user).exists():
                 init["custom"]['value']["django_prev_payment_method_token"] = payment_method.payment_method_token # passing on to the next payment method
             else:

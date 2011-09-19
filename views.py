@@ -87,6 +87,8 @@ def get_transparent_redirect_form_initial(user, base_url, payment_method = None,
 
     init['merchant_key'] = {'value': settings.SAMURAI_CREDENTIALS.merchant_key}
 
+    init['sandbox'] = {'value': settings.SAMURAI_SANDBOX}
+
     if update_url:
         init['redirect_url'] = {'value': base_url + reverse('samurai-update-payment-method-redirect')}
     else:

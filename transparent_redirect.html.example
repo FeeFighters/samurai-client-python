@@ -6,9 +6,13 @@
 
         <input name="custom" type="hidden" value="{{ samurai_form.custom.value }}" />
 
-	{% if payment_method_token %}
-		<input name="payment_method_token" value="{{ samurai_form.custom.value }}">
-	{% endif %}
+	    {% if samurai_form.payment_method_token.value %}
+		    <input name="payment_method_token" value="{{ samurai_form.payment_method_token.value }}">
+	    {% endif %}
+
+        {% if samurai_form.sandbox.value %}
+            <input name="sandbox" type="hidden" value="true"/>
+        {% endif %}
 
         <label class="{% if samurai_form.first_name.error %} validation-error{% endif %}"
             for="credit_card_first_name">First name</label>

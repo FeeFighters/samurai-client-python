@@ -13,7 +13,7 @@ REQUESTS = {
     "authorize_transaction":    ("POST",    "https://api.samurai.feefighters.com/v1/processors/%s/authorize.xml"),
     "capture_transaction":      ("POST",    "https://api.samurai.feefighters.com/v1/transactions/%s/capture.xml"),
     "void_transaction":         ("POST",    "https://api.samurai.feefighters.com/v1/transactions/%s/void.xml"),
-    "credit_transaction":      ("POST",    "https://api.samurai.feefighters.com/v1/transactions/%s/credit.xml"),
+    "credit_transaction":       ("POST",    "https://api.samurai.feefighters.com/v1/transactions/%s/credit.xml"),
     "fetch_transaction":        ("GET",     "https://api.samurai.feefighters.com/v1/transactions/%s.xml"),
 }
 

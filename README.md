@@ -1,5 +1,15 @@
 This is the python library for the [Samurai API](http://feefighters.com/samurai) from [Fee Fighters](http://feefighters.com). It allows you easily store customer payment information, and create transactions, without having to ever worry about having their credit card number cross your server.
 
+# Recent Changes
+
+## Version 0.1
+
+### Transparent Redirect "Regenerate"
+When a transparent redirect form is created, prepopulated with a previous payment method, and update is set to true, the form will now pass the payment_method_token on to FeeFighters. In such a case when the user submits this new form, any blank entries on required fields will be replaced by the value from the previous payment_method. In addition, invalid CCN/CVV fields will also be replaced. This way, you can output something like "************2342" (samurai\_form.card\_number.value in the template), and the user can submit it knowing that the old CCN actually got sent. See API documentation for details.
+
+### Sandbox flag
+When using the test environment, you should pass in a boolean hidden field called "sandbox". The new example transparent redirect field reflects this, and you should add it to your own template. You should also add SAMURAI_SANDBOX=True in settings.py. This is currently optional, and defaulting to False to avoid breaking compatibility, but in future versions it may be required.
+
 # Overview
 
 ## Payment Method

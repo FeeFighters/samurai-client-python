@@ -100,6 +100,7 @@ def get_transparent_redirect_form_initial(user, base_url, payment_method = None,
     if payment_method:
         if payment_method.last_four_digits:
             init['card_number']['value'] = "*" * 12 + payment_method.last_four_digits
+            init['verification_value']['value'] = "*" * 3
         if not payment_method.is_sensitive_data_valid:
             init['verification_value']['error'] = "Your credit card number or security code are invalid"
             init['card_number']['error'] = init['verification_value']['error']

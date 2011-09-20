@@ -52,11 +52,13 @@ This is if you want to run samurai_client_python test suite. It's good to test t
 
 ## Credentials
 
-If you want any of the tests to pass, you will need to create a file called test_credentials.py. Look at test_credentials.py.example for what to put in. __Do not__ put credentials from real merchants or processors into this file. You should get test credentials from FeeFighters.
+If you want any of the tests to pass, you will need to create a file called test_credentials.py. Look at test_extra/test_credentials.py.example for what to put in. __Do not__ put credentials from real merchants or processors into this file. You should get test credentials from FeeFighters.
 
 ## Django
 
-If you don't have this properly configured as part of Django, the Django tests will not pass.
+The Django portion of this client requires Django 1.2 or later, particularly because it uses the full_clean function for models.
+
+If you don't have this properly configured as part of Django, the Django tests will not pass. Look in test_extra/django for a quick test-only setup.
 
 ## Running
 

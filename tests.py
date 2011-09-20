@@ -54,7 +54,7 @@ initial_test_data = {
     "credit_card[cvv]":"000",
     "credit_card[expiry_month]":"1",
     "credit_card[expiry_year]":"2012",
-    "sandbox":"false"
+    "sandbox":"true"
 }
    
 

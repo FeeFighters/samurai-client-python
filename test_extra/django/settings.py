@@ -156,4 +156,3 @@ from core import FeeFighters
 
 SAMURAI_CREDENTIALS = FeeFighters(merchant_key = test_credentials.merchant_key, merchant_password = test_credentials.merchant_password)
 SAMURAI_SALT = "testsalt"
-SAMURAI_SANDBOX = True

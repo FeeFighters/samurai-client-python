@@ -851,8 +851,8 @@ class TestTransactionMethods(unittest.TestCase):
         self.assertEquals(transaction.transaction_type, "purchase")
         credit_transaction = transaction.credit(10)
 
-        self.assertEquals(credit_transaction.errors, [{'source': 'processor', 'context': u'processor.transaction', 'key': u'credit_criteria_invalid'}])
-        self.assertEquals(credit_transaction.transaction_type, "credit")
+        self.assertEquals(credit_transaction.errors, [])
+        self.assertEquals(credit_transaction.transaction_type, "void")
 
         self.assertEquals(credit_transaction.amount, "10.0")
 

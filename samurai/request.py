@@ -4,6 +4,7 @@
 """
 import urllib2
 import config
+import base64
 
 class Request(urllib2.Request):
     """
@@ -21,15 +22,15 @@ class Request(urllib2.Request):
 
         return urllib2.Request.get_method(self)
 
-def fetch_url(req, merchant_key=config.merchant_key,
+def fetch_url(req,
+              top_uri=config.top_uri,
+              merchant_key=config.merchant_key,
               merchant_password=config.merchant_password):
     """
     Opens a request to `req`. Handles basic auth with given `merchant_key`
     and `merchant_password`.
     """
-    auth_handler = urllib2.HTTPBasicAuthHandler()
-    auth_handler.add_password(realm='/',
-                            user=merchant_key,
-                            passwd=merchant_password)
-    opener = urllib2.build_opener(auth_handler)
-    return opener.open(req)
+    auth_info = base64.encodestring('%s:%s' % (merchant_key, merchant_password)).replace('\n', '')
+    req.add_header("Authorization", "Basic %s" % auth_info)
+    opener = urllib2.build_opener()
+    return opener.open(req).readlines()

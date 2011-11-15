@@ -23,7 +23,11 @@ def pipe(cur_val, *fns):
     return cur_val
 
 def str_to_datetime(date_str):
-    return datetime.datetime.strptime(date_str,  "%Y-%m-%dT%H:%M:%SZ")
+    try:
+        val = datetime.datetime.strptime(date_str,  "%Y-%m-%dT%H:%M:%SZ")
+    except ValueError:
+        val = date_str
+    return val
 
 def str_to_boolean(bool_str):
     if bool_str.lower() != 'false' and bool(bool_str):

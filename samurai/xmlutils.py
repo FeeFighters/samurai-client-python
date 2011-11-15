@@ -126,6 +126,7 @@ def from_xml(el):
     >>> expected == xml_to_dict(test)
     True
     """
+    val = None
     # Parent node.
     if el:
         if is_xml_el_dict(el):

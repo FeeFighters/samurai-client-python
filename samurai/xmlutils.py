@@ -88,10 +88,12 @@ def from_xml(el):
     ...   'is_sensitive_data_valid': False,
     ...   'last_four_digits': '1111',
     ...   'last_name': 'Smith',
-    ...   'messages': [{'class': 'error', 'context': 'input.cvv', 'key': 'too_long'},
-    ...    {'class': 'error',
-    ...     'context': 'input.card_number',
-    ...     'key': 'failed_checksum'}],
+    ...   'messages': {'message': [{'class': 'error',
+    ...      'context': 'input.cvv',
+    ...      'key': 'too_long'},
+    ...     {'class': 'error',
+    ...      'context': 'input.card_number',
+    ...      'key': 'failed_checksum'}]},
     ...   'payment_method_token': 'QhLaMNNpvHwfnFbHbUYhNxadx4C',
     ...   'state': {'nil': 'true'},
     ...   'updated_at': datetime.datetime(2011, 4, 22, 17, 57, 30),
@@ -138,9 +140,10 @@ def list_from_xml(els):
     Converts xml elements list `el_list` to a python list.
     """
     res = []
+    tag = els[0].tag
     for el in els:
         res.append(from_xml(el))
-    return res
+    return {tag: res}
 
 def dict_from_xml(els):
     """

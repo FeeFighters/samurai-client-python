@@ -2,7 +2,26 @@
 Methods to work with XML.
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 """
+import datetime
 from utils import str_to_datetime, str_to_boolean
+
+def xml_to_dict(root_or_str):
+    """
+    Converts `root_or_str` which can be parsed xml or a xml string to dict.
+    """
+    root = root_or_str
+    if isinstance(root, str):
+        import xml.etree.cElementTree as ElementTree
+        root = ElementTree.XML(root_or_str)
+    return {root.tag: from_xml(root)}
+
+def dict_to_xml(dict_xml):
+    """
+    Converts `dict_xml` which is a python dict to corresponding xml.
+    """
+# Functions below this line are implementation details.
+# Unless you are changing code, don't bother reading.
+# The functions above constitute the user interface.
 
 def is_xml_el_dict(el):
     """
@@ -21,16 +40,6 @@ def is_xml_el_list(el):
     if len(el) > 1 and el[0].tag == el[1].tag:
         return True
     return False
-
-def xml_to_dict(root_or_str):
-    """
-    Converts `root_or_str` which can be parsed xml or a xml string to dict.
-    """
-    root = root_or_str
-    if isinstance(root, str):
-        import xml.etree.cElementTree as ElementTree
-        root = ElementTree.XML(root_or_str)
-    return {root.tag: from_xml(root)}
 
 def from_xml(el):
     """
@@ -64,9 +73,31 @@ def from_xml(el):
     ... </payment_method>
     ... '''
 
-    >>> xml_to_dict(test)
-    {'payment_method': {'payment_method_token': 'QhLaMNNpvHwfnFbHbUYhNxadx4C', 'card_type': 'visa', 'first_name': 'Bob', 'last_name': 'Smith', 'zip': {'nil': 'true'}, 'city': {'nil': 'true'}, 'messages': [{'context': 'input.cvv', 'class': 'error', 'key': 'too_long'}, {'context': 'input.card_number', 'class': 'error', 'key': 'failed_checksum'}], 'created_at': datetime.datetime(2011, 2, 12, 20, 20, 46), 'is_sensitive_data_valid': False, 'updated_at': datetime.datetime(2011, 4, 22, 17, 57, 30), 'custom': 'Any value you want us to save with this payment method.', 'last_four_digits': '1111', 'state': {'nil': 'true'}, 'is_retained': True, 'address_1': {'nil': 'true'}, 'address_2': {'nil': 'true'}, 'country': {'nil': 'true'}, 'is_redacted': False, 'expiry_year': 2020, 'expiry_month': 1}}
-
+    >>> expected = {'payment_method': {'address_1': {'nil': 'true'},
+    ...   'address_2': {'nil': 'true'},
+    ...   'card_type': 'visa',
+    ...   'city': {'nil': 'true'},
+    ...   'country': {'nil': 'true'},
+    ...   'created_at': datetime.datetime(2011, 2, 12, 20, 20, 46),
+    ...   'custom': 'Any value you want us to save with this payment method.',
+    ...   'expiry_month': 1,
+    ...   'expiry_year': 2020,
+    ...   'first_name': 'Bob',
+    ...   'is_redacted': False,
+    ...   'is_retained': True,
+    ...   'is_sensitive_data_valid': False,
+    ...   'last_four_digits': '1111',
+    ...   'last_name': 'Smith',
+    ...   'messages': [{'class': 'error', 'context': 'input.cvv', 'key': 'too_long'},
+    ...    {'class': 'error',
+    ...     'context': 'input.card_number',
+    ...     'key': 'failed_checksum'}],
+    ...   'payment_method_token': 'QhLaMNNpvHwfnFbHbUYhNxadx4C',
+    ...   'state': {'nil': 'true'},
+    ...   'updated_at': datetime.datetime(2011, 4, 22, 17, 57, 30),
+    ...   'zip': {'nil': 'true'}}}
+    >>> expected == xml_to_dict(test)
+    True
     """
     # Parent node.
     if el:

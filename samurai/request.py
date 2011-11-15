@@ -1,46 +1,30 @@
+"""
+    Python restful client.
+    ~~~~~~~~~~~~~~~~~~~~~~
+"""
 import urllib2
-from utilities import _xml_to_dict, _dict_to_xml
 
-def _request(method, url, username, password, out_data={}):
+class Request(urllib2.Request):
     """
-        Takes an input dictionary. For PUT, sends as XML payload to the supplied URL with the given method.
-        For POST, sends as POST variables.
-        Returns XML result as dictionary, accounting for FeeFighters' conventions, setting datatypes
-
-        Raises/Returns error in case of HTTPS error, <error> outer tag returned
+    `urllib2.Request` doesn't support PUT and DELETE.
+    Augmenting it to support whole REST spectrum.
     """
+    GET = 'get'
+    POST = 'post'
+    PUT = 'put'
+    DELETE = 'delete'
 
-    request_debugging = 1
+    def __init__(self, url, data=None, headers={},
+                 origin_req_host=None, unverifiable=False, method=None):
+       urllib2.Request.__init__(self, url, data, headers, origin_req_host, unverifiable)
+       self.method = method
 
-    req = method
-    base64string = base64.encodestring('%s:%s' % (username, password))[:-1]
-    authheader =  "Basic %s" % base64string
-    req.add_header("Authorization", authheader)
+    def get_method(self):
+        if self.method:
+            return self.method
 
-    try:
-        if method == "GET":
-            handle = urllib2.urlopen(req)
-        else:
-            if method == "PUT":
-                req.get_method = lambda: 'PUT'
-            opener = urllib2.build_opener(urllib2.HTTPHandler)
-            req.add_header('Content-Type', 'application/xml')
-            if (out_data):
-                payload = _dict_to_xml(out_data)
-            else:
-                payload = ""
+        return urllib2.Request.get_method(self)
 
-            # Build the opener, using HTTPS handler
-            opener = urllib2.build_opener(urllib2.HTTPSHandler(debuglevel=request_debugging))
-            handle = opener.open(req, payload)
-
-        in_data = handle.read()
-        handle.close()
-
-        return _xml_to_dict(in_data)
-    except urllib2.HTTPError, e:
-        if request_debugging:
-          print e.read()
-        return {"error":{"errors":[{"context": "client", "source": "client", "key": "http_error_response_" + str(e.code) }], "info":[]}}
-    except:
-        return {"error":{"errors":[{"context": "client", "source": "client", "key": "unknown_response_error" }], "info":[]}}
+def fetch_url(req):
+    opener = urllib2.build_opener(urllib2.HttpHandler)
+    return opener.open(req)

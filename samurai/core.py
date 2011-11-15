@@ -1,5 +1,6 @@
 import urllib, urllib2, urlparse, base64, json, string
 from datetime import datetime
+from methods import _request
 
 from xml.dom.minidom import parseString as parseStringToXML, Node, Document
 
@@ -16,26 +17,6 @@ REQUESTS = {
     "credit_transaction":       ("POST",    "https://api.samurai.feefighters.com/v1/transactions/%s/credit.xml"),
     "fetch_transaction":        ("GET",     "https://api.samurai.feefighters.com/v1/transactions/%s.xml"),
 }
-
-
-
-def _dict_to_xml(in_data):
-    doc_tagname = in_data.keys()[0]
-    xml = parseStringToXML("<%s></%s>" % (doc_tagname, doc_tagname) )
-    for tag_name, tag_value in in_data[doc_tagname].iteritems():
-        newElement = xml.createElement(tag_name)
-        newTextNode = xml.createTextNode( str(tag_value) )
-        xml.documentElement.appendChild( newElement )
-        newElement.appendChild( newTextNode )
-    return xml.toxml()
-
-def _xml_to_dict(xml_string):
-    try:
-        xml_data = parseStringToXML(xml_string)
-    except: # parse error, or something
-        return None # error code, perhaps
-
-    return _xml_outer_node_to_dict(xml_data.documentElement)
 
 # I made a mistake here. I should have made this more agnostic to tag names, and only looked at the type attribute
 # and context/key in the case of messages. The consumer of the dict should take care of making it convenient
@@ -87,61 +68,6 @@ def _xml_outer_node_to_dict(xml_node):
                         out_data[element_name] = inner_node.nodeValue
 
     return { xml_node.tagName: out_data }
-
-class RequestWithPut(urllib2.Request):
-    use_put_method = False
-    def get_method(self):
-        super_method = urllib2.Request.get_method(self) # can't use super, urllib2.Request seems to be old-style class
-        if self.use_put_method and super_method == 'POST':
-            return 'PUT'
-        else:
-            return super_method
-
-def _request(method, url, username, password, out_data={}):
-    """
-        Takes an input dictionary. For PUT, sends as XML payload to the supplied URL with the given method.
-        For POST, sends as POST variables.
-        Returns XML result as dictionary, accounting for FeeFighters' conventions, setting datatypes
-
-        Raises/Returns error in case of HTTPS error, <error> outer tag returned
-    """
-
-    request_debugging = 1
-
-    req = RequestWithPut(url)
-    base64string = base64.encodestring('%s:%s' % (username, password))[:-1]
-    authheader =  "Basic %s" % base64string
-    req.add_header("Authorization", authheader)
-
-    try:
-        if method == "GET":
-            handle = urllib2.urlopen(req)
-        else:
-            if method == "PUT":
-                req.use_put_method = True
-            req.add_header('Content-Type', 'application/xml')
-            if (out_data):
-                payload = _dict_to_xml(out_data)
-            else:
-                payload = ""
-
-            # Build the opener, using HTTPS handler
-            opener = urllib2.build_opener(urllib2.HTTPSHandler(debuglevel=request_debugging))
-            handle = opener.open(req, payload)
-
-            # handle = urllib2.urlopen(req, payload)
-
-        in_data = handle.read()
-        handle.close()
-
-        return _xml_to_dict(in_data)
-    except urllib2.HTTPError, e:
-        if request_debugging:
-          print e.read()
-        return {"error":{"errors":[{"context": "client", "source": "client", "key": "http_error_response_" + str(e.code) }], "info":[]}}
-    except:
-        return {"error":{"errors":[{"context": "client", "source": "client", "key": "unknown_response_error" }], "info":[]}}
-    
 
 class FeeFighters(object):
     "If you want to create multiple payment methods without repeating yourself with the authentication info, you can use this"

@@ -17,10 +17,9 @@ class PaymentMethod(object):
     redact = 'https://api.samurai.feefighters.com/v1/payment_methods/%s/redact.xml'
 
     def __init__(self, payment_token, xml_res):
-        self.xml_res = xml_res
+        self.xml_data = xml_res
         self.payment_token = payment_token
-        dict_res = xml_to_dict(xml_res)
-        self.__dict__.update(dict_res)
+        self.dict_data = xml_to_dict(xml_res)
 
     @classmethod
     def find(cls, payment_token):

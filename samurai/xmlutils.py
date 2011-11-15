@@ -18,10 +18,35 @@ def xml_to_dict(root_or_str):
 def dict_to_xml(dict_xml):
     """
     Converts `dict_xml` which is a python dict to corresponding xml.
+
+    >>> dict_xml = {'transaction': {'amount': '100.00','currency_code': 'USD'}}
+
+    >>> expected = '<transaction><amount>100.00</amount><currency_code>USD</currency_code></transaction>'
+    >>> expected == dict_to_xml(dict_xml)
+    True
     """
+    return xml_from_dict(dict_xml)
+
 # Functions below this line are implementation details.
 # Unless you are changing code, don't bother reading.
 # The functions above constitute the user interface.
+
+def to_xml(tag, content):
+    if isinstance(content, dict):
+        val = '<%(tag)s>%(content)s</%(tag)s>' % dict(tag=tag,
+                                                      content=xml_from_dict(content))
+    else:
+        val = '<%(tag)s>%(content)s</%(tag)s>' % dict(tag=tag, content=content)
+    return val
+
+def xml_from_dict(dict_xml):
+    """
+    Converts `dict_xml` which is a python dict to corresponding xml.
+    """
+    tags = []
+    for tag, content in dict_xml.iteritems():
+        tags.append(to_xml(tag, content))
+    return ''.join(tags)
 
 def is_xml_el_dict(el):
     """

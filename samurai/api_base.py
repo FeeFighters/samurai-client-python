@@ -24,10 +24,17 @@ class ApiBase(object):
         Returns false otherwise.
         """
         error = False
+        # Check high level errors.
         if parsed_res.get('error'):
             error = True
             if parsed_res['error'].get('messages'):
-                self.errors = parsed_res['error']['messages']
+                self.errors = parsed_res['error']['messages'].get
+        # Check request specific error.
+        elif parsed_res.get(self.message_block) and parsed_res[self.message_block].get('message'):
+            error = any(True for m in parsed_res[self.message_block]['message']
+                        if m['class'] == 'error')
+            if error:
+                self.errors = parsed_res[self.message_block]
         return error
 
     def update_fields(self, xml_res):
@@ -35,6 +42,6 @@ class ApiBase(object):
         Updates field with the returned `xml_res`.
         """
         parsed_res = xml_to_dict(xml_res)
-        if not self.check_for_error(parsed_res) and parsed_res[self.top_xml_key]:
+        if not self.check_for_error(parsed_res) and parsed_res.get(self.top_xml_key):
             self.__dict__.update(**parsed_res[self.top_xml_key])
 

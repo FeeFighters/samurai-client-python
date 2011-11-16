@@ -16,38 +16,38 @@ class PaymentMethod(object):
     retain_url = 'https://api.samurai.feefighters.com/v1/payment_methods/%s/retain.xml'
     redact_url = 'https://api.samurai.feefighters.com/v1/payment_methods/%s/redact.xml'
 
-    def __init__(self, payment_token, xml_res):
-        self.xml_data = xml_res
-        self.payment_token = payment_token
-        self.dict_data = xml_to_dict(xml_res)
+    def __init__(self, xml_res):
+        self.update_fields(xml_res)
 
     @classmethod
-    def find(cls, payment_token):
+    def find(cls, payment_method_token):
         """
         Gets the payment method details.
         Returns xml data returned from the endpoint converted to python dictionary.
         """
-        req = Request(cls.find_url % payment_token)
-        return cls(payment_token, fetch_url(req))
+        req = Request(cls.find_url % payment_method_token)
+        return cls(fetch_url(req))
 
-    def is_sensitive_data_valid(self):
+    def update_fields(self, xml_res):
         """
-        Predicate for checking data validity.
+        Updates field with the returned `xml_res`.
         """
-        return self.dict_data['is_sensitive_data_valid']
+        parsed_data = xml_to_dict(xml_res)
+        if parsed_data['payment_method']:
+            self.__dict__.update(**parsed_data['payment_method'])
 
     def retain(self):
         """
         Issues `retain` call to samurai API.
         """
-        req = Request(self.retain_url % self.payment_token, method='post')
+        req = Request(self.retain_url % self.payment_method_token, method='post')
         res = fetch_url(req)
-        return xml_to_dict(res), res
+        self.update_fields(res)
 
     def redact(self):
         """
         Issues `redact` call to samurai API.
         """
-        req = Request(self.redact_url % self.payment_token, method='post')
+        req = Request(self.redact_url % self.payment_method_token, method='post')
         res = fetch_url(req)
-        return xml_to_dict(res), res
+        self.update_fields(res)

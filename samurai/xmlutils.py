@@ -1,6 +1,6 @@
 """
-Methods to work with XML.
-~~~~~~~~~~~~~~~~~~~~~~~~~
+    Methods to work with XML.
+    ~~~~~~~~~~~~~~~~~~~~~~~~~
 """
 import datetime
 from utils import str_to_datetime, str_to_boolean

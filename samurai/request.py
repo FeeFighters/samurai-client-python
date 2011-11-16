@@ -32,4 +32,8 @@ def fetch_url(req,
     auth_info = base64.encodestring('%s:%s' % (merchant_key, merchant_password)).replace('\n', '')
     req.add_header("Authorization", "Basic %s" % auth_info)
     opener = urllib2.build_opener()
-    return opener.open(req).read()
+    try:
+        res = opener.open(req).read()
+    except urllib2.URLError, ex:
+        res = ex.read()
+    return res

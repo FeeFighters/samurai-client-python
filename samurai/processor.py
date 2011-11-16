@@ -9,7 +9,6 @@
 
     Complex purchases are authorized first, and then can be rolled back or completed.
 """
-
 from xmlutils import dict_to_xml
 from request import Request, fetch_url
 from api_base import ApiBase

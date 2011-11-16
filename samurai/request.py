@@ -23,7 +23,6 @@ class Request(urllib2.Request):
         return urllib2.Request.get_method(self)
 
 def fetch_url(req,
-              top_uri=config.top_uri,
               merchant_key=config.merchant_key,
               merchant_password=config.merchant_password):
     """

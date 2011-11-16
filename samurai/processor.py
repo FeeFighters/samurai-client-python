@@ -20,6 +20,7 @@ class Processor(ApiBase):
     `Processor` deals with payments.
     """
     purchase_url = 'https://api.samurai.feefighters.com/v1/processors/%s/purchase.xml'
+    authorize_url = 'https://api.samurai.feefighters.com/v1/processors/%s/authorize.xml'
 
     purchase_optional_data = set(('billing_reference', 'customer_reference',
                                  'descriptor', 'custom'))
@@ -30,10 +31,44 @@ class Processor(ApiBase):
         Makes a simple purchase call.
         Returns a transaction object.
         """
+        return cls.purchase_authorize_helper(payment_method_token, amount,
+                                             'purchase', cls.purchase_url, options)
+
+    @classmethod
+    def authorize(cls, payment_method_token, amount, **options):
+        """
+        `authorize` doesn't charge credit card. It only reserves the transaction amount.
+        It returns a `Transaction` object which can be `captured` or `reversed`.
+        """
+        return cls.purchase_authorize_helper(payment_method_token, amount,
+                                             'authrize', cls.authorize_url, options)
+
+    @classmethod
+    def purchase_authorize_helper(cls, payment_method_token, amount, transaction_type,
+                                  endpoint, options):
+        """
+        Makes an `authorize` or `purchase` request.
+
+        `authorize` and `purchase` have same flow, except for `transaction_type` and
+        `endpoint`.
+        """
+        purchase_data = cls.construct_options(payment_method_token, transaction_type,
+                                              amount, options)
+        # Send payload and return transaction.
+        req = Request(endpoint % payment_method_token, purchase_data, method='post')
+        req.add_header("Content-Type", "application/xml")
+        return Transaction(fetch_url(req))
+
+    @classmethod
+    def construct_options(cls, payment_method_token, transaction_type,
+                          amount, options):
+        """
+        Constructs XML payload to be sent for the transaction.
+        """
         # Pick relevant options and construct xml payload.
         purchase_data = {
             'transaction': {
-                'type': 'purchase',
+                'type': transaction_type,
                 'currency_code': 'USD',
                 'amount': amount
             }
@@ -43,8 +78,4 @@ class Processor(ApiBase):
         options['payment_method_token'] = payment_method_token
         purchase_data['transaction'].update(options)
         purchase_data = dict_to_xml(purchase_data)
-
-        # Send payload and return transaction.
-        req = Request(cls.purchase_url % payment_method_token, purchase_data, method='post')
-        req.add_header("Content-Type", "application/xml")
-        return Transaction(fetch_url(req))
+        return purchase_data

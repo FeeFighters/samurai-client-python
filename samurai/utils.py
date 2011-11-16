@@ -34,7 +34,7 @@ def str_to_boolean(bool_str):
         return True
     return False
 
-def is_error(dict_data):
+def is_samurai_error(dict_data):
     """
     Returns true if returned Samurai result `dict_data` erred.
     """

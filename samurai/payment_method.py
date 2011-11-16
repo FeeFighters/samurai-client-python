@@ -19,6 +19,7 @@ class PaymentMethod(ApiBase):
     redact_url = 'https://api.samurai.feefighters.com/v1/payment_methods/%s/redact.xml'
 
     def __init__(self, xml_res):
+        super(ApiBase, self).__init__()
         self.update_fields(xml_res)
 
     @classmethod

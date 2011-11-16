@@ -6,7 +6,6 @@ Encapsulation for the stored payment data, and payment methods.
 """
 from xmlutils import xml_to_dict
 from request import Request, fetch_url
-from utils import is_samurai_error
 
 class PaymentMethod(object):
     """
@@ -42,11 +41,13 @@ class PaymentMethod(object):
         Issues `retain` call to samurai API.
         """
         req = Request(self.retain_url % self.payment_token, method='post')
-        return fetch_url(req)
+        res = fetch_url(req)
+        return xml_to_dict(res), res
 
     def redact(self):
         """
         Issues `redact` call to samurai API.
         """
         req = Request(self.redact_url % self.payment_token, method='post')
-        return fetch_url(req)
+        res = fetch_url(req)
+        return xml_to_dict(res), res

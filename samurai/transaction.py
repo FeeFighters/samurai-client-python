@@ -5,6 +5,7 @@
     Transactions encapsulate the returned data from the api when a transaction is made
     agains a payment token.
 """
+from xmlutils import dict_to_xml
 from api_base import ApiBase
 from request import Request, fetch_url
 
@@ -20,12 +21,27 @@ class Transaction(ApiBase):
     """
     top_xml_key = 'transaction'
 
+    find_url = 'https://api.samurai.feefighters.com/v1/transactions/%s.xml'
+    capture_url = 'https://api.samurai.feefighters.com/v1/transactions/%s/capture.xml'
+    reverse_url = 'https://api.samurai.feefighters.com/v1/transactions/%s/reverse.xml'
+    credit_url = 'https://api.samurai.feefighters.com/v1/transactions/%s/credit.xml'
+    void_url = 'https://api.samurai.feefighters.com/v1/transactions/%s/void.xml'
+
     def __init__(self, xml_res):
         """
         Initializes transaction data by parsing `xml_res`.
         """
         super(ApiBase, self).__init__()
         self.update_fields(xml_res)
+
+    @classmethod
+    def find(cls, reference_id):
+        """
+        Gets the transaction details.
+        Returns xml data returned from the endpoint converted to python dictionary.
+        """
+        req = Request(cls.find_url % reference_id)
+        return cls(fetch_url(req))
 
     def message_block(self, parsed_res):
         """
@@ -47,3 +63,43 @@ class Transaction(ApiBase):
                 self.errors = message_block['message']
             return True
         return super(ApiBase, self).check_for_errors(parsed_res)
+
+    def caputre(self, amount):
+        """
+        Captures transaction. Works only if the transaction is authorized.
+        """
+        return self.transact(self.capture_url, amount)
+
+    def credit(self, amount):
+        """
+        Credits transaction. Works only if the transaction is authorized.
+        Depending on the settlement status of the transaction, and the behavior of the 
+        processor endpoint, this API call may result in a `void`, `credit`, or `refund`.
+        """
+        return self.transact(self.credit_url, amount)
+
+    def reverse(self, amount):
+        """
+        Reverses transaction. Works only if the transaction is authorized.
+        """
+        return self.transact(self.reverse_url, amount)
+
+    def void(self):
+        """
+        Voids transaction. Works only if the transaction is authorized.
+        """
+        return self.transact(self.void_url)
+
+    def transact(self, endpoint, amount=None):
+        """
+        Meant to be used internally and shouldn't be called from outside.
+
+        Makes an `capture` or `reverse` request.
+        """
+        if amount:
+            data = dict_to_xml({'amount': amount})
+            req = Request(endpoint % self.transaction_token, data, method='post')
+        else:
+            req = Request(endpoint % self.transaction_token, method='post')
+        res = fetch_url(req)
+        return type(self)(res)

@@ -6,6 +6,7 @@ Encapsulation for the stored payment data, and payment methods.
 """
 from xmlutils import xml_to_dict
 from request import Request, fetch_url
+from utils import is_samurai_error
 
 class PaymentMethod(object):
     """
@@ -34,10 +35,7 @@ class PaymentMethod(object):
         """
         Predicate for checking data validity.
         """
-        if self.messages and self.messages.message and \
-           any(True for m in self.messages.message if m['class'] == 'error'):
-            return False
-        return True
+        return not is_samurai_error(self.dict_data)
 
     def retain(self):
         """

@@ -33,3 +33,17 @@ def str_to_boolean(bool_str):
     if bool_str.lower() != 'false' and bool(bool_str):
         return True
     return False
+
+def is_error(dict_data):
+    """
+    Returns true if returned Samurai result `dict_data` erred.
+    """
+    # Top level error.
+    if dict_data.get('error'):
+        return True
+    # Error in a response block.
+    if dict_data.get('messages') and dict_data['messages'].get('message') and \
+        any(True for m in dict_data['messages']['message'] if m['class'] == 'error'):
+        return True
+    # No errors.
+    return False

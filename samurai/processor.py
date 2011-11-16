@@ -41,12 +41,14 @@ class Processor(ApiBase):
         It returns a `Transaction` object which can be `captured` or `reversed`.
         """
         return cls.purchase_authorize_helper(payment_method_token, amount,
-                                             'authrize', cls.authorize_url, options)
+                                             'authorize', cls.authorize_url, options)
 
     @classmethod
     def purchase_authorize_helper(cls, payment_method_token, amount, transaction_type,
                                   endpoint, options):
         """
+        Meant to be used internally and shouldn't be called from outside.
+
         Makes an `authorize` or `purchase` request.
 
         `authorize` and `purchase` have same flow, except for `transaction_type` and

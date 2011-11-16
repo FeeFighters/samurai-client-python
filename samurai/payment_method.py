@@ -13,9 +13,9 @@ class PaymentMethod(object):
     Proxy for samurai api payment method endpoints.
     Implements `find`, `retain`, `redact` and other related operations.
     """
-    get = 'https://api.samurai.feefighters.com/v1/payment_methods/%s.xml'
-    retain = 'https://api.samurai.feefighters.com/v1/payment_methods/%s/retain.xml'
-    redact = 'https://api.samurai.feefighters.com/v1/payment_methods/%s/redact.xml'
+    find_url  = 'https://api.samurai.feefighters.com/v1/payment_methods/%s.xml'
+    retain_url = 'https://api.samurai.feefighters.com/v1/payment_methods/%s/retain.xml'
+    redact_url = 'https://api.samurai.feefighters.com/v1/payment_methods/%s/redact.xml'
 
     def __init__(self, payment_token, xml_res):
         self.xml_data = xml_res
@@ -28,25 +28,25 @@ class PaymentMethod(object):
         Gets the payment method details.
         Returns xml data returned from the endpoint converted to python dictionary.
         """
-        req = Request(cls.get % payment_token)
+        req = Request(cls.find_url % payment_token)
         return cls(payment_token, fetch_url(req))
 
     def is_sensitive_data_valid(self):
         """
         Predicate for checking data validity.
         """
-        return not is_samurai_error(self.dict_data)
+        return self.dict_data['is_sensitive_data_valid']
 
     def retain(self):
         """
         Issues `retain` call to samurai API.
         """
-        req = Request(self.retain % self.payment_token, method='post')
+        req = Request(self.retain_url % self.payment_token, method='post')
         return fetch_url(req)
 
     def redact(self):
         """
         Issues `redact` call to samurai API.
         """
-        req = Request(self.redact % self.payment_token, method='post')
+        req = Request(self.redact_url % self.payment_token, method='post')
         return fetch_url(req)

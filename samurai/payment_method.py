@@ -1,17 +1,19 @@
 """
-Payment method.
-~~~~~~~~~~~~~~~
+    Payment method.
+    ~~~~~~~~~~~~~~~
 
-Encapsulation for the stored payment data, and payment methods.
+    Encapsulation for the stored payment data, and payment methods.
 """
-from xmlutils import xml_to_dict
+from api_base import ApiBase
 from request import Request, fetch_url
 
-class PaymentMethod(object):
+class PaymentMethod(ApiBase):
     """
     Proxy for samurai api payment method endpoints.
     Implements `find`, `retain`, `redact` and other related operations.
     """
+    top_xml_key = 'payment_method'
+
     find_url  = 'https://api.samurai.feefighters.com/v1/payment_methods/%s.xml'
     retain_url = 'https://api.samurai.feefighters.com/v1/payment_methods/%s/retain.xml'
     redact_url = 'https://api.samurai.feefighters.com/v1/payment_methods/%s/redact.xml'
@@ -27,14 +29,6 @@ class PaymentMethod(object):
         """
         req = Request(cls.find_url % payment_method_token)
         return cls(fetch_url(req))
-
-    def update_fields(self, xml_res):
-        """
-        Updates field with the returned `xml_res`.
-        """
-        parsed_data = xml_to_dict(xml_res)
-        if parsed_data['payment_method']:
-            self.__dict__.update(**parsed_data['payment_method'])
 
     def retain(self):
         """

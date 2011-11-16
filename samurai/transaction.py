@@ -67,6 +67,8 @@ class Transaction(ApiBase):
     def caputre(self, amount):
         """
         Captures transaction. Works only if the transaction is authorized.
+
+        Returns a new transaction.
         """
         return self.transact(self.capture_url, amount)
 
@@ -75,18 +77,24 @@ class Transaction(ApiBase):
         Credits transaction. Works only if the transaction is authorized.
         Depending on the settlement status of the transaction, and the behavior of the 
         processor endpoint, this API call may result in a `void`, `credit`, or `refund`.
+
+        Returns a new transaction.
         """
         return self.transact(self.credit_url, amount)
 
     def reverse(self, amount):
         """
         Reverses transaction. Works only if the transaction is authorized.
+
+        Returns a new transaction.
         """
         return self.transact(self.reverse_url, amount)
 
     def void(self):
         """
         Voids transaction. Works only if the transaction is authorized.
+
+        Returns a new transaction.
         """
         return self.transact(self.void_url)
 
@@ -94,7 +102,7 @@ class Transaction(ApiBase):
         """
         Meant to be used internally and shouldn't be called from outside.
 
-        Makes an `capture` or `reverse` request.
+        Makes the specified call and returns resultant `transaction`.
         """
         if amount:
             data = dict_to_xml({'amount': amount})

@@ -22,8 +22,8 @@ class PaymentMethod(ApiBase):
     update_url  = 'https://api.samurai.feefighters.com/v1/payment_methods/%s.xml'
 
     create_data = set(('card_number', 'cvv', 'expiry_month', 'expiry_year',
-                                'first_name', 'last_name', 'address_1', 'address_2',
-                                'city', 'state', 'zip', 'custom'))
+                       'first_name', 'last_name', 'address_1', 'address_2',
+                       'city', 'state', 'zip', 'custom', 'sandbox'))
 
     def __init__(self, xml_res):
         super(ApiBase, self).__init__()

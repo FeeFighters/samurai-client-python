@@ -14,7 +14,7 @@ class Request(urllib2.Request):
     def __init__(self, url, data=None, headers={},
                  origin_req_host=None, unverifiable=False, method=None):
        urllib2.Request.__init__(self, url, data, headers, origin_req_host, unverifiable)
-       self.method = method
+       self.method = method.upper()
 
     def get_method(self):
         if self.method:

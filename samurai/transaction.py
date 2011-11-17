@@ -75,7 +75,7 @@ class Transaction(ApiBase):
     def credit(self, amount):
         """
         Credits transaction. Works only if the transaction is authorized.
-        Depending on the settlement status of the transaction, and the behavior of the 
+        Depending on the settlement status of the transaction, and the behavior of the
         processor endpoint, this API call may result in a `void`, `credit`, or `refund`.
 
         Returns a new transaction.

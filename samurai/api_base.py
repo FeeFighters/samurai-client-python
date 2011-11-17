@@ -15,7 +15,7 @@ class ApiBase(object):
     """
 
     def __init__(self):
-        self.errors = None
+        self.errors = False
 
     def message_block(self, parsed_res):
         """
@@ -34,16 +34,24 @@ class ApiBase(object):
         if parsed_res.get('error'):
             error = True
             if parsed_res['error'].get('messages') and parsed_res['error']['messages'].get('message'):
-                self.errors = parsed_res['error']['messages']['message']
-        # Check request specific error.
-        else:
-            message_block = self.message_block(parsed_res)
-            if message_block and message_block.get('message'):
-                error = any(True for m in message_block['message']
-                            if m['class'] == 'error')
-                if error:
-                    self.errors = message_block['message']
+                message = parsed_res['error']['messages']['message']
+                self.errors = message if isinstance(message, list) else [message]
         return error
+
+    def check_semantic_errors(self, parsed_res):
+        """
+        Check request specific error.
+        """
+        message_block = self.message_block(parsed_res)
+        if message_block and message_block.get('message'):
+            message = message_block['message']
+            if isinstance(message, list):
+                error = any(True for m in message
+                            if m.get('subclass') == 'error')
+            elif isinstance(message, dict):
+                error = True if message.get('subclass') == 'error' else False
+            if error:
+                self.errors = message if isinstance(message, list) else [message]
 
     def update_fields(self, xml_res):
         """
@@ -52,4 +60,5 @@ class ApiBase(object):
         parsed_res = xml_to_dict(xml_res)
         if not self.check_for_errors(parsed_res) and parsed_res.get(self.top_xml_key):
             self.__dict__.update(**parsed_res[self.top_xml_key])
+            self.check_semantic_errors(parsed_res)
 

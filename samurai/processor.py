@@ -30,7 +30,7 @@ class Processor(ApiBase):
         Makes a simple purchase call.
         Returns a transaction object.
         """
-        return cls.purchase_authorize_helper(payment_method_token, amount,
+        return cls.transact(payment_method_token, amount,
                                              'purchase', cls.purchase_url, options)
 
     @classmethod
@@ -39,12 +39,12 @@ class Processor(ApiBase):
         `authorize` doesn't charge credit card. It only reserves the transaction amount.
         It returns a `Transaction` object which can be `captured` or `reversed`.
         """
-        return cls.purchase_authorize_helper(payment_method_token, amount,
+        return cls.transact(payment_method_token, amount,
                                              'authorize', cls.authorize_url, options)
 
     @classmethod
-    def purchase_authorize_helper(cls, payment_method_token, amount, transaction_type,
-                                  endpoint, options):
+    def transact(cls, payment_method_token, amount, transaction_type,
+                 endpoint, options):
         """
         Meant to be used internally and shouldn't be called from outside.
 

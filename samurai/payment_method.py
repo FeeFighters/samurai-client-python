@@ -45,6 +45,7 @@ class PaymentMethod(ApiBase):
         req = Request(self.retain_url % self.payment_method_token, method='post')
         res = fetch_url(req)
         self.update_fields(res)
+        return self
 
     def redact(self):
         """
@@ -53,6 +54,7 @@ class PaymentMethod(ApiBase):
         req = Request(self.redact_url % self.payment_method_token, method='post')
         res = fetch_url(req)
         self.update_fields(res)
+        return self
 
     @classmethod
     def create(cls, card_number, cvv, expiry_month, expiry_year, **other_args):

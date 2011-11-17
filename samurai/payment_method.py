@@ -6,6 +6,7 @@
 """
 from api_base import ApiBase
 from request import Request, fetch_url
+from xmlutils import dict_to_xml
 
 class PaymentMethod(ApiBase):
     """
@@ -17,6 +18,12 @@ class PaymentMethod(ApiBase):
     find_url  = 'https://api.samurai.feefighters.com/v1/payment_methods/%s.xml'
     retain_url = 'https://api.samurai.feefighters.com/v1/payment_methods/%s/retain.xml'
     redact_url = 'https://api.samurai.feefighters.com/v1/payment_methods/%s/redact.xml'
+    create_url = 'https://api.samurai.feefighters.com/v1/payment_methods.xml'
+    update_url  = 'https://api.samurai.feefighters.com/v1/payment_methods/%s.xml'
+
+    create_data = set(('card_number', 'cvv', 'expiry_month', 'expiry_year',
+                                'first_name', 'last_name', 'address_1', 'address_2',
+                                'city', 'state', 'zip', 'custom'))
 
     def __init__(self, xml_res):
         super(ApiBase, self).__init__()
@@ -46,3 +53,50 @@ class PaymentMethod(ApiBase):
         req = Request(self.redact_url % self.payment_method_token, method='post')
         res = fetch_url(req)
         self.update_fields(res)
+
+    @classmethod
+    def create(cls, card_number, cvv, expiry_month, expiry_year, **other_args):
+        """
+        Creates a payment method.
+
+        Transaprent redirects are favored method for creating payment methods.
+        Using this call places the burden of PCI compliance on the client since the
+        data passes through it.
+        """
+        payload = {
+            'payment_method': {
+                'card_number': card_number,
+                'cvv': cvv,
+                'expiry_month': expiry_month,
+                'expiry_year': expiry_year,
+            }
+        }
+        optional_data = dict((k, v) for k, v in other_args.iteritems()
+                             if k in cls.create_data)
+        payload['payment_method'].update(**optional_data)
+        payload = dict_to_xml(payload)
+
+        # Send payload and return payment method.
+        req = Request(cls.create_url, payload, method='post')
+        req.add_header("Content-Type", "application/xml")
+        return cls(fetch_url(req))
+
+    def update(self, **other_args):
+        """
+        Updates a payment method.
+
+        Payment method can't be updated once it has been retained or redacted.
+        """
+        payload = {
+            'payment_method': {
+            }
+        }
+        optional_data = dict((k, v) for k, v in other_args.iteritems()
+                             if k in self.create_data)
+        payload['payment_method'].update(**optional_data)
+        payload = dict_to_xml(payload)
+
+        # Send payload and return payment method.
+        req = Request(self.update_url % self.payment_method_token, payload, method='put')
+        req.add_header("Content-Type", "application/xml")
+        return self

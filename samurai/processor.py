@@ -31,7 +31,7 @@ class Processor(ApiBase):
         Returns a transaction object.
         """
         return cls.transact(payment_method_token, amount,
-                                             'purchase', cls.purchase_url, options)
+                            'purchase', cls.purchase_url, options)
 
     @classmethod
     def authorize(cls, payment_method_token, amount, **options):
@@ -40,7 +40,7 @@ class Processor(ApiBase):
         It returns a `Transaction` object which can be `captured` or `reversed`.
         """
         return cls.transact(payment_method_token, amount,
-                                             'authorize', cls.authorize_url, options)
+                            'authorize', cls.authorize_url, options)
 
     @classmethod
     def transact(cls, payment_method_token, amount, transaction_type,

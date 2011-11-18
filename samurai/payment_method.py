@@ -14,7 +14,6 @@ class PaymentMethod(ApiBase):
     Implements `find`, `retain`, `redact` and other related operations.
 
     This object makes available the response retured from the api.
-
     ::
         <payment_method>
             <payment_method_token>QhLaMNNpvHwfnFbHbUYhNxadx4C</payment_method_token>
@@ -43,7 +42,6 @@ class PaymentMethod(ApiBase):
         </payment_method>
 
     All xml elements inside top level element are directly accessible on the object.
-
     ::
         pm = PaymentMethod.find(token)
         pm.is_redcated
@@ -76,7 +74,6 @@ class PaymentMethod(ApiBase):
         """
         Gets the payment method details.
         Returns xml data returned from the endpoint converted to python dictionary.
-
         ::
             pm = PaymentMethod.find(token)
             if not pm.errors:
@@ -90,7 +87,6 @@ class PaymentMethod(ApiBase):
     def retain(self):
         """
         Issues `retain` call to samurai API.
-
         ::
             pm = PaymentMethod.find(token)
             if not pm.retain().is_retain:
@@ -107,7 +103,6 @@ class PaymentMethod(ApiBase):
     def redact(self):
         """
         Issues `redact` call to samurai API.
-
         ::
             pm = PaymentMethod.find(token)
             if not pm.redact().is_redacted:
@@ -129,7 +124,6 @@ class PaymentMethod(ApiBase):
         Transaprent redirects are favored method for creating payment methods.
         Using this call places the burden of PCI compliance on the client since the
         data passes through it.
-
         ::
             pm = PaymentMethod.create('4242424242424242', '133', '07', '12')
             assert pm.is_sensitive_data_valid
@@ -157,8 +151,6 @@ class PaymentMethod(ApiBase):
         Updates a payment method.
 
         Payment method can't be updated once it has been retained or redacted.
-
-
         ::
             pm = PaymentMethod.create('4242424242424242', '133', '07', '12')
             assert pm.is_sensitive_data_valid

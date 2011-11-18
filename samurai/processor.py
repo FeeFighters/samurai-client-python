@@ -32,7 +32,6 @@ class Processor(ApiBase):
     def purchase(cls, payment_method_token, amount, **options):
         """
         Makes a simple purchase call and returns a transaction object.
-
         ::
             transaction = Processor.purchase(payment_method_token, amount)
 

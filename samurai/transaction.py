@@ -19,7 +19,6 @@ class Transaction(ApiBase):
     In case of simple purchases, the returned data will be mostly used for inspection.
 
     In complex transactions, opertaions on it are used to perform or cancel it.
-
     ::
         <transaction>
             <reference_id>3dcFjTC7LDjIjTY3nkKjBVZ8qkZ</reference_id>
@@ -65,7 +64,6 @@ class Transaction(ApiBase):
         """
         Gets the transaction details.
         Returns xml data returned from the endpoint converted to python dictionary.
-
         ::
             trans = Transaction.find(reference_id)
             if not trans.errors:

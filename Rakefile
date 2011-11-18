@@ -23,3 +23,10 @@ namespace :pypi do
     Rake::Task["clean"].invoke
   end
 end
+
+namespace :docs do
+  desc "Generate html documentation"
+  task :html do
+    sh "PYTHONPATH='..' make -C docs clean html"
+  end
+end

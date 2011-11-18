@@ -33,7 +33,7 @@ class Transaction(ApiBase):
         Initializes transaction data by parsing `xml_res`.
         """
         super(Transaction, self).__init__()
-        self.update_fields(xml_res)
+        self._update_fields(xml_res)
 
     @classmethod
     def find(cls, reference_id):
@@ -44,7 +44,7 @@ class Transaction(ApiBase):
         req = Request(cls.find_url % reference_id)
         return cls(fetch_url(req))
 
-    def message_block(self, parsed_res):
+    def _message_block(self, parsed_res):
         """
         Returns the message block from the `parsed_res`
         """
@@ -52,7 +52,7 @@ class Transaction(ApiBase):
                 parsed_res[self.top_xml_key].get('processor_response') and
                 parsed_res[self.top_xml_key]['processor_response'].get('messages'))
 
-    def check_for_errors(self, parsed_res):
+    def _check_for_errors(self, parsed_res):
         """
         Checks `parsed_res` for error blocks.
         If the transaction failed, sets `self.errors`
@@ -60,12 +60,12 @@ class Transaction(ApiBase):
         """
         if parsed_res.get(self.top_xml_key):
             if not parsed_res[self.top_xml_key]['processor_response']['success']:
-                message_block = self.message_block(parsed_res)
+                message_block = self._message_block(parsed_res)
                 if message_block and message_block.get('message'):
                     message = message_block['message']
                     self.errors = message if isinstance(message, list) else [message]
                 return True
-        return super(Transaction, self).check_for_errors(parsed_res)
+        return super(Transaction, self)._check_for_errors(parsed_res)
 
     def capture(self, amount):
         """
@@ -73,7 +73,7 @@ class Transaction(ApiBase):
 
         Returns a new transaction.
         """
-        return self.transact(self.capture_url, amount)
+        return self._transact(self.capture_url, amount)
 
     def credit(self, amount):
         """
@@ -83,7 +83,7 @@ class Transaction(ApiBase):
 
         Returns a new transaction.
         """
-        return self.transact(self.credit_url, amount)
+        return self._transact(self.credit_url, amount)
 
     def reverse(self, amount):
         """
@@ -91,7 +91,7 @@ class Transaction(ApiBase):
 
         Returns a new transaction.
         """
-        return self.transact(self.reverse_url, amount)
+        return self._transact(self.reverse_url, amount)
 
     def void(self):
         """
@@ -99,9 +99,9 @@ class Transaction(ApiBase):
 
         Returns a new transaction.
         """
-        return self.transact(self.void_url)
+        return self._transact(self.void_url)
 
-    def transact(self, endpoint, amount=None):
+    def _transact(self, endpoint, amount=None):
         """
         Meant to be used internally and shouldn't be called from outside.
 

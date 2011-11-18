@@ -17,13 +17,13 @@ class ApiBase(object):
     def __init__(self):
         self.errors = False
 
-    def message_block(self, parsed_res):
+    def _message_block(self, parsed_res):
         """
         Returns the message block from the `parsed_res`
         """
         return parsed_res.get(self.top_xml_key) and parsed_res[self.top_xml_key].get('messages')
 
-    def check_for_errors(self, parsed_res):
+    def _check_for_errors(self, parsed_res):
         """
         Checks `parsed_res` for error blocks.
         If it contains error blocks, it return True and sets errors.
@@ -38,11 +38,11 @@ class ApiBase(object):
                 self.errors = message if isinstance(message, list) else [message]
         return error
 
-    def check_semantic_errors(self, parsed_res):
+    def _check_semantic_errors(self, parsed_res):
         """
         Check request specific error.
         """
-        message_block = self.message_block(parsed_res)
+        message_block = self._message_block(parsed_res)
         if message_block and message_block.get('message'):
             message = message_block['message']
             if isinstance(message, list):
@@ -53,12 +53,12 @@ class ApiBase(object):
             if error:
                 self.errors = message if isinstance(message, list) else [message]
 
-    def update_fields(self, xml_res):
+    def _update_fields(self, xml_res):
         """
         Updates field with the returned `xml_res`.
         """
         parsed_res = xml_to_dict(xml_res)
-        if not self.check_for_errors(parsed_res) and parsed_res.get(self.top_xml_key):
+        if not self._check_for_errors(parsed_res) and parsed_res.get(self.top_xml_key):
             self.__dict__.update(**parsed_res[self.top_xml_key])
-            self.check_semantic_errors(parsed_res)
+            self._check_semantic_errors(parsed_res)
 

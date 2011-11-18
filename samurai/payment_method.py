@@ -27,7 +27,7 @@ class PaymentMethod(ApiBase):
 
     def __init__(self, xml_res):
         super(PaymentMethod, self).__init__()
-        self.update_fields(xml_res)
+        self._update_fields(xml_res)
 
     @classmethod
     def find(cls, payment_method_token):
@@ -44,7 +44,7 @@ class PaymentMethod(ApiBase):
         """
         req = Request(self.retain_url % self.payment_method_token, method='post')
         res = fetch_url(req)
-        self.update_fields(res)
+        self._update_fields(res)
         return self
 
     def redact(self):
@@ -53,7 +53,7 @@ class PaymentMethod(ApiBase):
         """
         req = Request(self.redact_url % self.payment_method_token, method='post')
         res = fetch_url(req)
-        self.update_fields(res)
+        self._update_fields(res)
         return self
 
     @classmethod

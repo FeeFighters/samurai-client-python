@@ -1,73 +1,225 @@
-This is the python library for the [Samurai API](http://feefighters.com/samurai) from [Fee Fighters](http://feefighters.com). It allows you easily store customer payment information, and create transactions, without having to ever worry about having their credit card number cross your server.
+Samurai
+=======
 
-# Recent Changes
+If you are an online merchant and using FeeFighters' Samurai gateway, this package will
+make your life easy. Integrate with the samurai.feefighters.com portal and
+process transactions.
 
-### Transparent Redirect "Regenerate"
-When a transparent redirect form is created, prepopulated with a previous payment method, and update is set to true, the form will now pass the payment_method_token on to FeeFighters. In such a case when the user submits this new form, any blank entries on required fields will be replaced by the value from the previous payment_method. In addition, invalid CCN/CVV fields will also be replaced. This way, you can output something like "************2342" (samurai\_form.card\_number.value in the template), and the user can submit it knowing that the old CCN actually got sent. See API documentation for details.
 
-### Sandbox flag
-When using the test environment, you should pass in a boolean hidden field called "sandbox". The new example transparent redirect field reflects this, and you should add it to your own template. You should also add SAMURAI_SANDBOX=True in settings.py. This currently defaults to False to avoid breaking compatibility.
+Installation
+------------
 
-# Overview
+Install Samurai just like any other package.
 
-## Payment Method
+    pip install "samurai"
 
-This a set of credentials for making a credit card payment. It includes:
+On most of the systems, you will need the `sudo` permissions if you are doing a system wide
+install.
 
-* __less sensitive data__ that you will have access to (name, address, credit card expiration date, etc)
-* __more sensitive data__ that you won't have access to (credit card number and cvv)
-* __the state of the payment method__ (is data valid, is payment method redacted, etc)
+    sudo pip install "samurai"
 
-Each Payment Method is identified by a `payment_method_token`.
 
-## Transaction
+Configuration
+-------------
 
-This is an action taken based on a payment method, and/or a previous transaction. There are a 5 different types of transactions.
+Set options on `samurai.config` module before you use it. The api uses the keys set on this module.
 
-* __purchase__ - a complete payment
-* __authorize__ - the first part of a two-step payment
-* __capture__ - the second part of a two-step payment
-* __void__ - the cancellation of any previous payment
-* __credit__ - a partial or complete refund on an existing completed payment
+    import samurai.config as config
+    config.merchant_key = your_merchant_key
+    config.merchant_password = your_merchant_password
 
-Each Transaction is identified by a `reference_id`, and each set of transactions that relate to each other (the capture for an earlier authorize, the void of an earlier purchase, etc) is identified by a `transaction_token`.
+Samurai API Reference
+---------------------
 
-# Installation
+1. Overview
 
-This library currently isn't a proper Python package, so you will have to get the source. The main directory serves as a module, though you should rename it to something like `samurai_client_python`, since dashes aren't valid for module names. The directory also works as a Django application, if you would like to use it for that.
+The Samurai API uses simple XML payloads transmitted over 256-bit encrypted HTTPS POST with Basic Authentication. . This package encapsulates the API calls as simple method calls on PaymentMethod and Transaction models, so you shouldn't need to think about the details of the actual API.
 
-# Core 
+2. Getting started
 
-The module `samurai_client_python.core` and the file _transparent_redirect.html.example_ contain everything necessary to use the Samurai API. You will be in charge of saving references to Payment Methods and Transactions [Read More](/FeeFighters/samurai-client-python/blob/master/docs/core.md)
+To use the Samurai API, you'll need a Merchant Key, Merchant Password and a Processor Token. Sign up for an account to get started.
 
-# Django
+Make sure you have configured the `merchant_key` and `merchant_password` as documented above before making any other
+api calls.
 
-The modules `samurai_client_python.models`, `samurai_client_python.urls`, `samurai_client_python.views` make up a Django app which call on `samurai_client_python.core`. [Read More](/FeeFighters/samurai-client-python/blob/master/docs/django.md) (Though read first about Core, above)
 
-# Testing
+3. Payment Method
 
-This is if you want to run samurai_client_python test suite. It's good to test the code, and also to test if anything is wrong or just changed with the samurai API. If you suddenly start having unexplainable problems, this might be a good place to start.
+Each time a user stores their billing information in the Samurai system, we call it a Payment Method.
 
-## Credentials
+Our transparent redirect uses a simple HTML form on your website that submits your user’s billing information directly to us over SSL so that you never have to worry about handling credit card data yourself. We’ll quickly store the sensitive information, tokenize it for you and return the user to a page on your website of your choice with the new Payment Method Token.
 
-If you want any of the tests to pass, you will need to create a file called test_credentials.py. Look at test_extra/test_credentials.py.example for what to put in. __Do not__ put credentials from real merchants or processors into this file. You should get test credentials from FeeFighters.
+From that point forward, you always refer to the Payment Method Token anytime you’d like to use that billing information for anything.
 
-## Django
 
-The Django portion of this client requires Django 1.2 or later, particularly because it uses the full_clean function for models.
+    1. Fetching a Payment Method
 
-If you don't have this properly configured as part of Django, the Django tests will not pass. Look in test_extra/django for a quick test-only setup.
+    Since the transparent redirect form submits directly to Samurai, you don’t get to see the data that the user entered until you read it from us. This way, you can see if the user made any input errors and ask them to resubmit the transparent redirect form if necessary.
 
-## Running
+    We’ll only send you non-sensitive data, so you will no be able to pre-populate the sensitive fields (card number and cvv) in the resubmission form.
 
-Testing only core.py:
+        from samurai.payment_method import PaymentMethod
+        payment_method = PaymentMethod.find(payment_method_token)
+        if not payment_method.errors:
+            # Operate on valid `payment_method`
+        else:
+            # Check the errors. payment_method.errors will be a list of errors.
 
-    python test.py
 
-This will run every test, and fail the Django ones:
+    2. Retaining a Payment Method
 
-Testing everything:
+    Once you have determined that you’d like to keep a Payment Method in the Samurai vault, you must tell us to retain it. If you don’t explicitly issue a retain command, we will delete the Payment Method within 48 hours in order to comply with PCI DSS requirement 3.1, which states:
 
-    ./manage.py test samurai_client_python
+        "3.1 Keep cardholder data storage to a minimum. Develop a data retention and disposal policy. Limit storage amount and retention time to that which is required for business, legal, and/or regulatory purposes, as documented in the data retention policy."
 
-This requires that you have samurai_client_python in your INSTALLED_APPS.
+    However, if you perform a purchase or authorize transaction with a Payment Method, it will be automatically retained for future use.
+
+        from samurai.payment_method import PaymentMethod
+        payment_method = PaymentMethod.find(payment_method_token)
+        if payment_method.redact().is_redacted:
+            # redacted
+        else:
+            # Check the errors. payment_method.errors will be a list of errors.
+
+
+    3. Redacting a Payment Method
+
+    It’s important that you redact payment methods whenever you know you won’t need them anymore. Typically this is after the credit card’s expiration date or when your user has supplied you with a different card to use.
+
+        from samurai.payment_method import PaymentMethod
+        payment_method = PaymentMethod.find(payment_method_token)
+        if payment_method.retain().is_retained:
+            # retained
+        else:
+            # Check the errors. payment_method.errors will be a list of errors.
+
+4. Processing Payments (Simple)
+
+When you’re ready to process a payment, the simplest way to do so is with the purchase method.
+
+    from samurai.processor import Processor
+    trans = Processor.purchase(payment_method_token, amount)
+    if not trans.errors: 
+        # successful 
+    else:
+        # Check the errors. trans.errors will be a list of errors.
+
+The following optional parameters are available on a purchase transaction:
+
+* descriptor: descriptor for the transaction
+* custom: custom data, this data does not get passed to the processor, it is stored within api.samurai.feefighters.com only
+* customer_reference: an identifier for the customer, this will appear in the processor if supported
+* billing_reference: an identifier for the purchase, this will appear in the processor if supported
+
+    trans = Processor.purchase(payment_method_token, amount,
+                               descriptor=descriptor, custom=custom)
+
+
+5. Processing Payments (Complex)
+
+In some cases, a simple purchase isn’t flexible enough. The alternative is to do an Authorize first, then a Capture if you want to process a previously authorized transaction or a Void if you want to cancel it. Be sure to save the transaction_token that is returned to you from an authorization because you’ll need it to capture or void the transaction.
+
+    1. Authorize
+
+    An Authorize doesn’t charge your user’s credit card. It only reserves the transaction amount and it has the added benefit of telling you if your processor thinks that the transaction will succeed whenever you Capture it.
+
+        from samurai.processor import Processor
+        trans = Processor.authorize(payment_method_token, amount)
+        if not trans.errors: 
+            # successful 
+        else:
+            # Check the errors. trans.errors will be a list of errors.
+
+    2. Capture
+
+    You can only execute a capture on a transaction that has previously been authorized. You’ll need the Transaction Token value from your Authorize command to construct the URL to use for capturing it.
+
+        from samurai.processor import Processor
+        trans = Processor.authorize(payment_method_token, amount)
+        if not trans.errors: 
+            new_trans = trans.capture(amount)
+            if not new_trans.errors:
+                # successful
+        else:
+            # Check the errors. trans.errors will be a list of errors.
+
+    3. Reverse
+
+    A reverse call cancels or refunds a previous transaction. You’ll need the Transaction Token value from your Authorize command to construct the URL to use for reversing it.
+
+    The amount is optional. If omitted, then the entire transaction will be reversed.
+
+    *Note: depending on the settlement status of the transaction, and the behavior of the processor endpoint, this API call may result in a Void, Credit, or Refund transaction.*
+
+        from samurai.processor import Processor
+        trans = Processor.authorize(payment_method_token, amount)
+        if not trans.errors: 
+            new_trans = trans.reverse(amount)
+            if not new_trans.errors:
+                # successful
+        else:
+            # Check the errors. trans.errors will be a list of errors.
+
+
+    4. Void
+
+    The void method is maintained for backwards-compatibility, but it is essentially an alias of the reverse API method. You’ll need the Transaction Token value from your Authorize command to construct the URL to use for voiding it.
+
+    Note: depending on the settlement status of the transaction, and the behavior of the processor endpoint, this API call may result in a Void, Credit, or Refund transaction.
+
+        from samurai.processor import Processor
+        trans = Processor.authorize(payment_method_token, amount)
+        if not trans.errors: 
+            new_trans = trans.void()
+            if not new_trans.errors:
+                # successful
+        else:
+            # Check the errors. trans.errors will be a list of errors.
+    
+
+    5. Credit
+
+    The credit method is maintained for backwards-compatibility, but it is essentially an alias of the reverse API method. You’ll need the Transaction Token value from your Authorize command to construct the URL to use for crediting it.
+
+    *Note: depending on the settlement status of the transaction, and the behavior of the processor endpoint, this API call may result in a Void, Credit, or Refund transaction.*
+
+        from samurai.processor import Processor
+        trans = Processor.authorize(payment_method_token, amount)
+        if not trans.errors: 
+            new_trans = trans.credit(amount)
+            if not new_trans.errors:
+                # successful
+        else:
+            # Check the errors. trans.errors will be a list of errors.
+    
+    6. Fetching a Transaction
+
+    Each time you use one of the transaction processing functions `(purchase, authorize, capture, void, credit)` you are given a `reference_id` that uniquely identifies the transaction for reporting purposes. If you want to retrieve transaction data, you can use this fetch method on the reference_id.
+
+        from samurai.transaction import Transaction 
+        trans = Transaction.find(reference_id)
+        if not trans.errors: 
+            # successful
+        else:
+            # Check the errors. trans.errors will be a list of errors.
+    
+5. Server-to-Server Payment Method API
+
+We don't typically recommend using our server-to-server API for creating/updating Payment Methods, because it requires credit card data to pass through your server and exposes you to a much greater PCI compliance & risk liability.
+
+However, there are situations where using the server-to-server API is appropriate, such as integrating a server that is already PCI-secure with Samurai or if you need to perform complex transactions and don't mind bearing the burden of greater compliance and risk.
+
+    1. Creating a Payment Method (S2S)
+
+        from samurai.payment_method import PaymentMethod
+        pm = PaymentMethod.create('4242424242424242', '133', '07', '12')
+
+    2. Updating a Payment Method (S2S)
+
+        from samurai.payment_method import PaymentMethod
+        pm = PaymentMethod.find(payment_method_token)
+        pm.update(first_name='dummy')
+        if not pm.errors:
+            assert pm.first_name == 'dummy'
+        else:
+            # deal with pm.errors

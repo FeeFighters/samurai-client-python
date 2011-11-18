@@ -8,7 +8,7 @@
 from xmlutils import dict_to_xml
 from api_base import ApiBase
 from request import Request, fetch_url
-from exceptions import UnauthorizedTransactionError
+from errors import UnauthorizedTransactionError
 
 class Transaction(ApiBase):
     """

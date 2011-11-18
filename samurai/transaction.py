@@ -66,7 +66,7 @@ class Transaction(ApiBase):
                 return True
         return super(Transaction, self).check_for_errors(parsed_res)
 
-    def caputre(self, amount):
+    def capture(self, amount):
         """
         Captures transaction. Works only if the transaction is authorized.
 

@@ -31,7 +31,7 @@ class Transaction(ApiBase):
         """
         Initializes transaction data by parsing `xml_res`.
         """
-        super(ApiBase, self).__init__()
+        super(Transaction, self).__init__()
         self.update_fields(xml_res)
 
     @classmethod
@@ -57,12 +57,13 @@ class Transaction(ApiBase):
         If the transaction failed, sets `self.errors`
         Else delegates to superclass.
         """
-        if not parsed_res[self.top_xml_key]['processor_response']['success']:
-            message_block = self.message_block(parsed_res)
-            if message_block and message_block.get('message'):
-                self.errors = message_block['message']
-            return True
-        return super(ApiBase, self).check_for_errors(parsed_res)
+        if parsed_res.get(self.top_xml_key):
+            if not parsed_res[self.top_xml_key]['processor_response']['success']:
+                message_block = self.message_block(parsed_res)
+                if message_block and message_block.get('message'):
+                    self.errors = message_block['message']
+                return True
+        return super(Transaction, self).check_for_errors(parsed_res)
 
     def caputre(self, amount):
         """

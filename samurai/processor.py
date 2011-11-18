@@ -17,6 +17,10 @@ from transaction import Transaction
 class Processor(ApiBase):
     """
     `Processor` deals with payments.
+
+    The result of the operations is a transaction object. See documentation for `Transaction`
+    to see the operations possible on transactions.
+
     """
     purchase_url = 'https://api.samurai.feefighters.com/v1/processors/%s/purchase.xml'
     authorize_url = 'https://api.samurai.feefighters.com/v1/processors/%s/authorize.xml'
@@ -28,6 +32,22 @@ class Processor(ApiBase):
     def purchase(cls, payment_method_token, amount, **options):
         """
         Makes a simple purchase call and returns a transaction object.
+
+        ::
+            transaction = Processor.purchase(payment_method_token, amount)
+
+            # Follwing additional parameters can be passed while make a purchase call.
+            # billing_reference: Custom identifier for this transaction in your application
+            # customer_reference: Custom identifier for this customer in your application
+            # descriptor: Custom descriptor here if your processor supports it
+            # custom: Any value you like.  Will be passed to your processor for tracking.
+
+            transaction = Processor.purchase(payment_method_token, amount,
+                                             billing_reference=billing_reference,
+                                             customer_reference=customer_reference,
+                                             descriptor=descripton,
+                                             custom=custom)
+
         """
         return cls._transact(payment_method_token, amount,
                             'purchase', cls.purchase_url, options)
@@ -37,6 +57,8 @@ class Processor(ApiBase):
         """
         `authorize` doesn't charge credit card. It only reserves the transaction amount.
         It returns a `Transaction` object which can be `captured` or `reversed`.
+
+        It takes the same parameter as the `purchase` call.
         """
         return cls._transact(payment_method_token, amount,
                             'authorize', cls.authorize_url, options)

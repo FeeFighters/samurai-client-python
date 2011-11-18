@@ -26,7 +26,7 @@ class PaymentMethod(ApiBase):
                        'city', 'state', 'zip', 'custom', 'sandbox'))
 
     def __init__(self, xml_res):
-        super(ApiBase, self).__init__()
+        super(PaymentMethod, self).__init__()
         self.update_fields(xml_res)
 
     @classmethod

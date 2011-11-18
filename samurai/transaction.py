@@ -61,7 +61,8 @@ class Transaction(ApiBase):
             if not parsed_res[self.top_xml_key]['processor_response']['success']:
                 message_block = self.message_block(parsed_res)
                 if message_block and message_block.get('message'):
-                    self.errors = message_block['message']
+                    message = message_block['message']
+                    self.errors = message if isinstance(message, list) else [message]
                 return True
         return super(Transaction, self).check_for_errors(parsed_res)
 

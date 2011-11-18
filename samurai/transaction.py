@@ -8,6 +8,7 @@
 from xmlutils import dict_to_xml
 from api_base import ApiBase
 from request import Request, fetch_url
+from exceptions import UnauthorizedTransactionError
 
 class Transaction(ApiBase):
     """
@@ -106,6 +107,8 @@ class Transaction(ApiBase):
 
         Makes the specified call and returns resultant `transaction`.
         """
+        if not getattr(self, 'transaction_token'):
+            raise UnauthorizedTransactionError('Transaction is not authorized.')
         if amount:
             data = dict_to_xml({'amount': amount})
             req = Request(endpoint % self.transaction_token, data, method='post')

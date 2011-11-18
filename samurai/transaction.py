@@ -65,6 +65,13 @@ class Transaction(ApiBase):
         """
         Gets the transaction details.
         Returns xml data returned from the endpoint converted to python dictionary.
+
+        ::
+            trans = Transaction.find(reference_id)
+            if not trans.errors:
+                # Operate on transaction object
+            else:
+                # Work on list of errors in trans.errors
         """
         req = Request(cls.find_url % reference_id)
         return cls(fetch_url(req))
@@ -95,6 +102,9 @@ class Transaction(ApiBase):
     def is_success(self):
         """
         Returns True if the transaction succeeded.
+
+        You are better of checking `trans.errors`
+
         """
         if (getattr(self, 'processor_response') and self.processor_response.get('success')
             and self.processor_response['success']):
@@ -104,6 +114,8 @@ class Transaction(ApiBase):
     def is_declined(self):
         """
         Returns True if the transaction is declined.
+
+        You are better off checking `trans.errors`
         """
         message_block = self._message_block
         if message_block and message_block.get('message'):
@@ -117,6 +129,14 @@ class Transaction(ApiBase):
         Captures transaction. Works only if the transaction is authorized.
 
         Returns a new transaction.
+        ::
+            trans = Processor.authorize(payment_method_token, amount)
+            trans = trans.capture()
+            if not trans.errors:
+                # Capture successful
+            else:
+                # Work on list of errors in trans.errors
+
         """
         return self._transact(self.capture_url, amount)
 
@@ -127,14 +147,24 @@ class Transaction(ApiBase):
         processor endpoint, this API call may result in a `void`, `credit`, or `refund`.
 
         Returns a new transaction.
+        ::
+            trans = Processor.authorize(payment_method_token, amount)
+            trans = trans.credit(amount)
+            if not trans.errors:
+                # Capture successful
+            else:
+                # Work on list of errors in trans.errors
+
         """
         return self._transact(self.credit_url, amount)
 
-    def reverse(self, amount):
+    def reverse(self, amount=None):
         """
         Reverses transaction. Works only if the transaction is authorized.
 
         Returns a new transaction.
+
+        The `amount` field is optional. If left blank, the whole transaction is reversed.
         """
         return self._transact(self.reverse_url, amount)
 

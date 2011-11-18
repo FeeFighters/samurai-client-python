@@ -41,14 +41,6 @@ samurai Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`request` Module
----------------------
-
-.. automodule:: samurai.request
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 :mod:`transaction` Module
 -------------------------
 
@@ -56,20 +48,3 @@ samurai Package
     :members:
     :undoc-members:
     :show-inheritance:
-
-:mod:`utils` Module
--------------------
-
-.. automodule:: samurai.utils
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`xmlutils` Module
-----------------------
-
-.. automodule:: samurai.xmlutils
-    :members:
-    :undoc-members:
-    :show-inheritance:
-

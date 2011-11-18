@@ -312,32 +312,6 @@ It returns a <cite>Transaction</cite> object which can be <cite>captured</cite> 
 
 </div>
 </div>
-<div class="section" id="module-samurai.request">
-<span id="request-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">request</span></tt> Module<a class="headerlink" href="#module-samurai.request" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="python-restful-client">
-<h3>Python restful client.<a class="headerlink" href="#python-restful-client" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="samurai.request.Request">
-<em class="property">class </em><tt class="descclassname">samurai.request.</tt><tt class="descname">Request</tt><big>(</big><em>url</em>, <em>data=None</em>, <em>headers={}</em>, <em>origin_req_host=None</em>, <em>unverifiable=False</em>, <em>method=None</em><big>)</big><a class="reference internal" href="_modules/samurai/request.html#Request"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#samurai.request.Request" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">urllib2.Request</span></tt></p>
-<p><cite>urllib2.Request</cite> doesn&#8217;t support PUT and DELETE.
-Augmenting it to support whole REST spectrum.</p>
-<dl class="method">
-<dt id="samurai.request.Request.get_method">
-<tt class="descname">get_method</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/samurai/request.html#Request.get_method"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#samurai.request.Request.get_method" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="function">
-<dt id="samurai.request.fetch_url">
-<tt class="descclassname">samurai.request.</tt><tt class="descname">fetch_url</tt><big>(</big><em>req</em>, <em>merchant_key=None</em>, <em>merchant_password=None</em><big>)</big><a class="reference internal" href="_modules/samurai/request.html#fetch_url"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#samurai.request.fetch_url" title="Permalink to this definition">¶</a></dt>
-<dd><p>Opens a request to <cite>req</cite>. Handles basic auth with given <cite>merchant_key</cite>
-and <cite>merchant_password</cite>.</p>
-</dd></dl>
-
-</div>
-</div>
 <div class="section" id="module-samurai.transaction">
 <span id="transaction-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">transaction</span></tt> Module<a class="headerlink" href="#module-samurai.transaction" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="transaction">
@@ -482,57 +456,6 @@ else:
 
 </div>
 </div>
-<div class="section" id="module-samurai.utils">
-<span id="utils-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">utils</span></tt> Module<a class="headerlink" href="#module-samurai.utils" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="general-utilities">
-<h3>General utilities<a class="headerlink" href="#general-utilities" title="Permalink to this headline">¶</a></h3>
-<dl class="function">
-<dt id="samurai.utils.pipe">
-<tt class="descclassname">samurai.utils.</tt><tt class="descname">pipe</tt><big>(</big><em>cur_val</em>, <em>*fns</em><big>)</big><a class="reference internal" href="_modules/samurai/utils.html#pipe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#samurai.utils.pipe" title="Permalink to this definition">¶</a></dt>
-<dd><p>Pipes <cite>cur_val</cite> through <cite>fns</cite>.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">sqr</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="n">x</span> <span class="o">*</span> <span class="n">x</span>
-
-<span class="k">def</span> <span class="nf">negate</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="o">-</span><span class="n">x</span>
-
-<span class="sb">`pipe(5, sqr, negate)`</span>
-</pre></div>
-</div>
-<p>is the same as</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">negate</span><span class="p">(</span><span class="n">sqr</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="function">
-<dt id="samurai.utils.str_to_boolean">
-<tt class="descclassname">samurai.utils.</tt><tt class="descname">str_to_boolean</tt><big>(</big><em>bool_str</em><big>)</big><a class="reference internal" href="_modules/samurai/utils.html#str_to_boolean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#samurai.utils.str_to_boolean" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="samurai.utils.str_to_datetime">
-<tt class="descclassname">samurai.utils.</tt><tt class="descname">str_to_datetime</tt><big>(</big><em>date_str</em><big>)</big><a class="reference internal" href="_modules/samurai/utils.html#str_to_datetime"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#samurai.utils.str_to_datetime" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</div>
-</div>
-<div class="section" id="module-samurai.xmlutils">
-<span id="xmlutils-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">xmlutils</span></tt> Module<a class="headerlink" href="#module-samurai.xmlutils" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="methods-to-work-with-xml">
-<h3>Methods to work with XML.<a class="headerlink" href="#methods-to-work-with-xml" title="Permalink to this headline">¶</a></h3>
-<dl class="function">
-<dt id="samurai.xmlutils.dict_to_xml">
-<tt class="descclassname">samurai.xmlutils.</tt><tt class="descname">dict_to_xml</tt><big>(</big><em>dict_xml</em><big>)</big><a class="reference internal" href="_modules/samurai/xmlutils.html#dict_to_xml"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#samurai.xmlutils.dict_to_xml" title="Permalink to this definition">¶</a></dt>
-<dd><p>Converts <cite>dict_xml</cite> which is a python dict to corresponding xml.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="samurai.xmlutils.xml_to_dict">
-<tt class="descclassname">samurai.xmlutils.</tt><tt class="descname">xml_to_dict</tt><big>(</big><em>root_or_str</em><big>)</big><a class="reference internal" href="_modules/samurai/xmlutils.html#xml_to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#samurai.xmlutils.xml_to_dict" title="Permalink to this definition">¶</a></dt>
-<dd><p>Converts <cite>root_or_str</cite> which can be parsed xml or a xml string to dict.</p>
-</dd></dl>
-
-</div>
-</div>
 </div>
 
 
@@ -564,20 +487,8 @@ else:
 <li><a class="reference internal" href="#payment-processor-for-simple-purchases">Payment processor for simple purchases.</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#module-samurai.request"><tt class="docutils literal"><span class="pre">request</span></tt> Module</a><ul>
-<li><a class="reference internal" href="#python-restful-client">Python restful client.</a></li>
-</ul>
-</li>
 <li><a class="reference internal" href="#module-samurai.transaction"><tt class="docutils literal"><span class="pre">transaction</span></tt> Module</a><ul>
 <li><a class="reference internal" href="#transaction">Transaction</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#module-samurai.utils"><tt class="docutils literal"><span class="pre">utils</span></tt> Module</a><ul>
-<li><a class="reference internal" href="#general-utilities">General utilities</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#module-samurai.xmlutils"><tt class="docutils literal"><span class="pre">xmlutils</span></tt> Module</a><ul>
-<li><a class="reference internal" href="#methods-to-work-with-xml">Methods to work with XML.</a></li>
 </ul>
 </li>
 </ul>

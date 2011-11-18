@@ -180,4 +180,6 @@ class PaymentMethod(ApiBase):
         # Send payload and return payment method.
         req = Request(self.update_url % self.payment_method_token, payload, method='put')
         req.add_header("Content-Type", "application/xml")
-        return type(self)(fetch_url(req))
+        res = fetch_url(req)
+        self._update_fields(res)
+        return self

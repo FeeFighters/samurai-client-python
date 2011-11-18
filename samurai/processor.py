@@ -27,8 +27,7 @@ class Processor(ApiBase):
     @classmethod
     def purchase(cls, payment_method_token, amount, **options):
         """
-        Makes a simple purchase call.
-        Returns a transaction object.
+        Makes a simple purchase call and returns a transaction object.
         """
         return cls._transact(payment_method_token, amount,
                             'purchase', cls.purchase_url, options)

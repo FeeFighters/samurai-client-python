@@ -27,6 +27,7 @@ Set options on `samurai.config` module before you use it. The api uses the keys 
     import samurai.config as config
     config.merchant_key = your_merchant_key
     config.merchant_password = your_merchant_password
+    config.processor_token = processor_token
 
 Samurai API Reference
 ---------------------
@@ -99,8 +100,8 @@ Samurai API Reference
 
         from samurai.processor import Processor
         trans = Processor.purchase(payment_method_token, amount)
-        if not trans.errors: 
-            # successful 
+        if not trans.errors:
+            # successful
         else:
             # Check the errors. trans.errors will be a list of errors.
 
@@ -126,8 +127,8 @@ Samurai API Reference
 
             from samurai.processor import Processor
             trans = Processor.authorize(payment_method_token, amount)
-            if not trans.errors: 
-                # successful 
+            if not trans.errors:
+                # successful
             else:
                 # Check the errors. trans.errors will be a list of errors.
 
@@ -137,7 +138,7 @@ Samurai API Reference
 
             from samurai.processor import Processor
             trans = Processor.authorize(payment_method_token, amount)
-            if not trans.errors: 
+            if not trans.errors:
                 new_trans = trans.capture(amount)
                 if not new_trans.errors:
                     # successful
@@ -154,7 +155,7 @@ Samurai API Reference
 
             from samurai.processor import Processor
             trans = Processor.authorize(payment_method_token, amount)
-            if not trans.errors: 
+            if not trans.errors:
                 new_trans = trans.reverse(amount)
                 if not new_trans.errors:
                     # successful
@@ -170,13 +171,13 @@ Samurai API Reference
 
             from samurai.processor import Processor
             trans = Processor.authorize(payment_method_token, amount)
-            if not trans.errors: 
+            if not trans.errors:
                 new_trans = trans.void()
                 if not new_trans.errors:
                     # successful
             else:
                 # Check the errors. trans.errors will be a list of errors.
-    
+
 
     5. ####Credit
 
@@ -186,24 +187,24 @@ Samurai API Reference
 
             from samurai.processor import Processor
             trans = Processor.authorize(payment_method_token, amount)
-            if not trans.errors: 
+            if not trans.errors:
                 new_trans = trans.credit(amount)
                 if not new_trans.errors:
                     # successful
             else:
                 # Check the errors. trans.errors will be a list of errors.
-        
+
     6. ####Fetching a Transaction
 
         Each time you use one of the transaction processing functions `(purchase, authorize, capture, void, credit)` you are given a `reference_id` that uniquely identifies the transaction for reporting purposes. If you want to retrieve transaction data, you can use this fetch method on the reference_id.
 
-            from samurai.transaction import Transaction 
+            from samurai.transaction import Transaction
             trans = Transaction.find(reference_id)
-            if not trans.errors: 
+            if not trans.errors:
                 # successful
             else:
                 # Check the errors. trans.errors will be a list of errors.
-        
+
 5. ###Server-to-Server Payment Method API
 
     We don't typically recommend using our server-to-server API for creating/updating Payment Methods, because it requires credit card data to pass through your server and exposes you to a much greater PCI compliance & risk liability.

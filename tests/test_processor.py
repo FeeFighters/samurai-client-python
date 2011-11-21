@@ -9,13 +9,13 @@ class TestPaymentMethod(unittest.TestCase):
     def test_purchase_failure(self):
         token = self.pm.payment_method_token
         trans = Processor.purchase(token, 10)
-        errors = ["Couldn't find Processor with token = %s" % token]
+        errors = ['You cannot use a live payment method with a sandbox processor']
         assert trans.errors == errors
 
     def test_authorize_failure(self):
         token = self.pm.payment_method_token
         trans = Processor.authorize(token, 10)
-        errors = ["Couldn't find Processor with token = %s" % token]
+        errors = ['You cannot use a live payment method with a sandbox processor']
         assert trans.errors == errors
 
 if __name__ == '__main__':

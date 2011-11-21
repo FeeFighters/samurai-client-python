@@ -10,6 +10,7 @@
         import samurai.config as config
         config.merchant_key = your_merchant_key
         config.merchant_password = your_merchant_password
+        config.processor_token = default processor token
 """
 import sys
 import logging

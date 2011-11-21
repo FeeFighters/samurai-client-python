@@ -54,6 +54,6 @@ def dump_request(req, res, logger=config.logger):
     """
     Logs `req` and `res` using `logger`.
     """
-    logger.debug("Request url: %s\n Request data: %s\n Result: %s\n" % (req.get_full_url(),
+    logger.debug("Request url: %s\nRequest data: %s\nResult: %s\n" % (req.get_full_url(),
                                                                         req.get_data(),
                                                                         res))

@@ -9,6 +9,7 @@
 
     Complex purchases are authorized first, and then can be rolled back or completed.
 """
+import config
 from xmlutils import dict_to_xml
 from request import Request, fetch_url
 from api_base import ApiBase
@@ -29,7 +30,8 @@ class Processor(ApiBase):
                                  'descriptor', 'custom'))
 
     @classmethod
-    def purchase(cls, payment_method_token, amount, **options):
+    def purchase(cls, payment_method_token, amount,
+                 processor_token=config.processor_token, **options):
         """
         Makes a simple purchase call and returns a transaction object.
         ::
@@ -48,23 +50,24 @@ class Processor(ApiBase):
                                              custom=custom)
 
         """
-        return cls._transact(payment_method_token, amount,
+        return cls._transact(payment_method_token, amount, processor_token,
                             'purchase', cls.purchase_url, options)
 
     @classmethod
-    def authorize(cls, payment_method_token, amount, **options):
+    def authorize(cls, payment_method_token, amount,
+                  processor_token=config.processor_token, **options):
         """
         `authorize` doesn't charge credit card. It only reserves the transaction amount.
         It returns a `Transaction` object which can be `captured` or `reversed`.
 
         It takes the same parameter as the `purchase` call.
         """
-        return cls._transact(payment_method_token, amount,
+        return cls._transact(payment_method_token, amount, processor_token,
                             'authorize', cls.authorize_url, options)
 
     @classmethod
-    def _transact(cls, payment_method_token, amount, transaction_type,
-                 endpoint, options):
+    def _transact(cls, payment_method_token, amount, processor_token,
+                  transaction_type, endpoint, options):
         """
         Meant to be used internally and shouldn't be called from outside.
 
@@ -76,13 +79,13 @@ class Processor(ApiBase):
         purchase_data = cls._construct_options(payment_method_token, transaction_type,
                                               amount, options)
         # Send payload and return transaction.
-        req = Request(endpoint % payment_method_token, purchase_data, method='post')
+        req = Request(endpoint % processor_token, purchase_data, method='post')
         req.add_header("Content-Type", "application/xml")
         return Transaction(fetch_url(req))
 
     @classmethod
     def _construct_options(cls, payment_method_token, transaction_type,
-                          amount, options):
+                           amount, options):
         """
         Constructs XML payload to be sent for the transaction.
         """

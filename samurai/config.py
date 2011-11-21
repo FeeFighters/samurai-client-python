@@ -17,9 +17,9 @@ from logging import Formatter, StreamHandler
 
 debug = False
 # FIXME: Leaving it here for dev. To be removed.
-merchant_key = 'edfd1670f11055730dca8219'
-merchant_password = '43cc06e733c8f9135c331b78'
-processor_token = 'a799d7691f7c5b492751b34e'
+merchant_key = 'a1ebafb6da5238fb8a3ac9f6'
+merchant_password = 'ae1aa640f6b735c4730fbb56'
+processor_token = '5a0e1ca1e5a11a2997bbf912'
 
 top_uri='https://api.samurai.feefighters.com/v1/',
 

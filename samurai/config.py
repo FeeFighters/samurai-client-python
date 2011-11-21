@@ -22,7 +22,7 @@ merchant_password = 'ae1aa640f6b735c4730fbb56'
 
 top_uri='https://api.samurai.feefighters.com/v1/',
 
-log_format = '%(levelname)s - %(asctime)s - %(filename)s:%(funcName)s:%(lineno)s - \n%(message)s'
+log_format = '%(levelname)s - %(asctime)s - %(filename)s:%(funcName)s:%(lineno)s - \n%(message)s\n\n'
 def default_logger():
     """
     Returns an instance of default logger.

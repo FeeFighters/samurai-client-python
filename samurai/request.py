@@ -3,8 +3,10 @@
     ~~~~~~~~~~~~~~~~~~~~~~
 """
 import urllib2
-import config
 import base64
+
+import config
+from errors import NotConfiguredError
 
 class Request(urllib2.Request):
     """
@@ -29,11 +31,29 @@ def fetch_url(req,
     Opens a request to `req`. Handles basic auth with given `merchant_key`
     and `merchant_password`.
     """
+    # Check if user configured `key` and `password`
+    if not merchant_key or not merchant_password:
+        raise NotConfiguredError('Please set merchant_key and merchant_password before making the call.')
     auth_info = base64.encodestring('%s:%s' % (merchant_key, merchant_password)).replace('\n', '')
     req.add_header("Authorization", "Basic %s" % auth_info)
     opener = urllib2.build_opener()
     try:
         res = opener.open(req).read()
     except urllib2.URLError, ex:
-        res = ex.read()
+        # If the server returned an error, return it.
+        # Else if there is a network problem, let the client handle it.
+        if getattr(ex, 'read', None):
+            res = ex.read()
+        else:
+            raise ex
+    if config.debug:
+        dump_request(req, res)
     return res
+
+def dump_request(req, res, logger=config.logger):
+    """
+    Logs `req` and `res` using `logger`.
+    """
+    logger.debug("Request url: %s\n Request data: %s\n Result: %s\n" % (req.get_full_url(),
+                                                                        req.get_data(),
+                                                                        res))

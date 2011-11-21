@@ -11,6 +11,27 @@
         config.merchant_key = your_merchant_key
         config.merchant_password = your_merchant_password
 """
+import sys
+import logging
+from logging import Formatter, StreamHandler
+
+debug = False
 merchant_key = None
 merchant_password = None
 top_uri='https://api.samurai.feefighters.com/v1/',
+
+log_format = '%(levelname)s - %(asctime)s - %(filename)s:%(funcName)s:%(lineno)s - \n%(message)s'
+def default_logger():
+    """
+    Returns an instance of default logger.
+    Default logger dumps data to `sys.stderr`.
+    """
+    logger = logging.getLogger('samurai')
+    logger.setLevel(logging.DEBUG)
+    handler = StreamHandler(sys.stderr)
+    handler.setFormatter(Formatter(log_format))
+    handler.setLevel(logging.DEBUG)
+    logger.addHandler(handler)
+    return logger
+
+logger = default_logger()

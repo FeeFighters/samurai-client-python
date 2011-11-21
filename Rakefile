@@ -7,7 +7,7 @@ end
 
 desc "Run tests."
 task :test do
-  sh "nosetests"
+  sh "nosetests -v"
 end
 
 namespace :pypi do

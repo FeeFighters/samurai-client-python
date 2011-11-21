@@ -181,7 +181,8 @@ class Transaction(ApiBase):
         Makes the specified call and returns resultant `transaction`.
         """
         if not getattr(self, 'transaction_token', None):
-            raise UnauthorizedTransactionError('Transaction is not authorized.')
+            raise UnauthorizedTransactionError('Transaction token is missing. Only authorized'
+                                               'transactions can make this call.')
         if amount:
             data = dict_to_xml({'amount': amount})
             req = Request(endpoint % self.transaction_token, data, method='post')

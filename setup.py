@@ -1,7 +1,7 @@
 from distutils.core import setup
 setup(
     name="samurai",
-    version="0.1",
+    version="0.2",
     description="Samurai Python API",
     author="samurai@feefighters.com",
     author_email="samurai@feefighters.com",

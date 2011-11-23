@@ -121,7 +121,7 @@ class PaymentMethod(ApiBase):
         """
         Creates a payment method.
 
-        Transaprent redirects are favored method for creating payment methods.
+        Transparent redirects are favored method for creating payment methods.
         Using this call places the burden of PCI compliance on the client since the
         data passes through it.
         ::

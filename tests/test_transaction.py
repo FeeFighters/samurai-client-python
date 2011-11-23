@@ -48,10 +48,10 @@ class TestTransaction(unittest.TestCase):
 
     def test_purchase_partial_reverse(self):
         purchase = Processor.purchase(self.pm.payment_method_token, 10.0)      
-        trans = purchase.reverse('5.0')
+        trans = purchase.reverse(5.0)
         self.assertTrue(trans.success)
         self.assertEquals(trans.errors, [])
-        self.assertEquals(trans.amount, 5.0)        
+        self.assertEquals(trans.amount, '5.0')
 
 if __name__ == '__main__':
     unittest.main()

@@ -15,7 +15,7 @@ class ApiBase(object):
     """
 
     def __init__(self):
-        self.errors = False
+        self.errors = []
 
     def _message_block(self, parsed_res):
         """
@@ -36,6 +36,7 @@ class ApiBase(object):
             if parsed_res['error'].get('messages') and parsed_res['error']['messages'].get('message'):
                 message = parsed_res['error']['messages']['message']
                 self.errors = message if isinstance(message, list) else [message]
+                self.errors = filter(lambda m: m['subclass']=='error', self.errors)
         return error
 
     def _check_semantic_errors(self, parsed_res):
@@ -52,6 +53,7 @@ class ApiBase(object):
                 error = True if message.get('subclass') == 'error' else False
             if error:
                 self.errors = message if isinstance(message, list) else [message]
+                self.errors = filter(lambda m: m['subclass']=='error', self.errors)
 
     def _update_fields(self, xml_res):
         """

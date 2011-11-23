@@ -82,7 +82,7 @@ class Transaction(ApiBase):
                 parsed_res[self.top_xml_key].get('processor_response') and
                 parsed_res[self.top_xml_key]['processor_response'].get('messages'))
 
-    def _check_for_errors(self, parsed_res):
+    def _check_semantic_errors(self, parsed_res):
         """
         Checks `parsed_res` for error blocks.
         If the transaction failed, sets `self.errors`
@@ -94,8 +94,9 @@ class Transaction(ApiBase):
                 if message_block and message_block.get('message'):
                     message = message_block['message']
                     self.errors = message if isinstance(message, list) else [message]
+                    self.errors = filter(lambda m: m['subclass']=='error', self.errors)
                 return True
-        return super(Transaction, self)._check_for_errors(parsed_res)
+        return super(Transaction, self)._check_semantic_errors(parsed_res)
 
     def is_success(self):
         """
@@ -119,7 +120,7 @@ class Transaction(ApiBase):
         if message_block and message_block.get('message'):
             messages = message_block['message']
             return any(True for m in messages if isinstance(m, dict)
-                       and m.get('key') == 'decline')
+                       and m.get('key') == 'declined')
         return False
 
     def capture(self, amount):

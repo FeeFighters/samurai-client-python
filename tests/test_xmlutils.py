@@ -59,13 +59,12 @@ class TestXmlutils(unittest.TestCase):
         'updated_at': datetime.datetime(2011, 4, 22, 17, 57, 30),
         'zip': {'nil': 'true'}}}
 
-        assert expected == xml_to_dict(test)
+        self.assertEqual(expected, xml_to_dict(test))
 
     def test_dict_to_xml(self):
-        dict_xml = {'transaction': {'amount': '100.00','currency_code': 'USD'}}
-
-        expected = '<transaction><amount>100.00</amount><currency_code>USD</currency_code></transaction>'
-        assert expected == dict_to_xml(dict_xml)
+        dict_xml = {'transaction': {'amount': '100.00', 'currency_code': 'USD', 'something':True}}
+        expected = '<transaction><amount>100.00</amount><something>true</something><currency_code>USD</currency_code></transaction>'
+        self.assertEqual(expected, dict_to_xml(dict_xml))
 
 if __name__ == '__main__':
     unittest.main()

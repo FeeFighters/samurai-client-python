@@ -30,6 +30,8 @@ def _to_xml(tag, content):
     if isinstance(content, dict):
         val = '<%(tag)s>%(content)s</%(tag)s>' % dict(tag=tag,
                                                       content=_xml_from_dict(content))
+    elif isinstance(content, bool):
+        val = '<%(tag)s>%(content)s</%(tag)s>' % dict(tag=tag, content=str(content).lower())
     else:
         val = '<%(tag)s>%(content)s</%(tag)s>' % dict(tag=tag, content=content)
     return val

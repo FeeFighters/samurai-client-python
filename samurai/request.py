@@ -15,6 +15,7 @@ class Request(urllib2.Request):
     """
     def __init__(self, url, data=None, headers={},
                  origin_req_host=None, unverifiable=False, method=None):
+       headers['Content-Type'] = 'text/xml'
        urllib2.Request.__init__(self, url, data, headers, origin_req_host, unverifiable)
        self.method = method.upper()
 
@@ -54,6 +55,6 @@ def dump_request(req, res, logger=config.logger):
     """
     Logs `req` and `res` using `logger`.
     """
-    logger.debug("Request url: %s\nRequest data: %s\nResult: %s\n" % (req.get_full_url(),
+    logger.debug("Request url: %s %s\nRequest data: %s\nResult: %s\n" % (req.get_method(), req.get_full_url(),
                                                                         req.get_data(),
                                                                         res))

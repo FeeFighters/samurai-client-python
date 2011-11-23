@@ -10,6 +10,11 @@ task :test do
   sh "nosetests -v"
 end
 
+desc "Run tests on CI server."
+task :test_ci do
+  sh "nosetests -v --with-xunit --xunit-file=results.xml"
+end
+
 namespace :pypi do
   desc "Register the package with PyPI"
   task :register => :clean do

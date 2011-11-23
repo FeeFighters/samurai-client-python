@@ -17,7 +17,7 @@ class TestTransaction(unittest.TestCase):
         auth = Processor.authorize(self.pm.payment_method_token, 10.0)      
         trans = auth.capture(8.0)
         self.assertTrue(trans.success)
-        self.assertEquals(trans.amount, 8.0)                
+        self.assertEquals(trans.amount, '8.0')
         self.assertEquals(trans.errors, [])
 
     def test_authorize_capture_failed(self):
@@ -48,7 +48,7 @@ class TestTransaction(unittest.TestCase):
 
     def test_purchase_partial_reverse(self):
         purchase = Processor.purchase(self.pm.payment_method_token, 10.0)      
-        trans = purchase.reverse(5.0)
+        trans = purchase.reverse('5.0')
         self.assertTrue(trans.success)
         self.assertEquals(trans.errors, [])
         self.assertEquals(trans.amount, 5.0)        

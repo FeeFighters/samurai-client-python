@@ -130,7 +130,7 @@ class Transaction(ApiBase):
         Returns a new transaction.
         ::
             trans = Processor.authorize(payment_method_token, amount)
-            trans = trans.capture()
+            trans = trans.capture(amount)
             if not trans.errors:
                 # Capture successful
             else:
@@ -165,6 +165,8 @@ class Transaction(ApiBase):
 
         The `amount` field is optional. If left blank, the whole transaction is reversed.
         """
+        if not amount:
+          amount = self.amount
         return self._transact(self.reverse_url, amount)
 
     def void(self):
@@ -185,7 +187,7 @@ class Transaction(ApiBase):
             raise UnauthorizedTransactionError('Transaction token is missing. Only authorized'
                                                'transactions can make this call.')
         if amount:
-            data = dict_to_xml({'amount': amount})
+            data = dict_to_xml({'transaction':{'amount': amount}})
             req = Request(endpoint % self.transaction_token, data, method='post')
         else:
             req = Request(endpoint % self.transaction_token, method='post')

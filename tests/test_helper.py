@@ -9,6 +9,19 @@ config.merchant_password = 'ae1aa640f6b735c4730fbb56'
 config.processor_token = '5a0e1ca1e5a11a2997bbf912'
 config.debug = True
 
-default_payment_method = PaymentMethod.create('4242424242424242',
-                                              '133', '07', '12', first_name='first_name',
-                                              last_name='last_name', sandbox=True)
+def default_payment_method(options={}):
+  data = {
+      'card_number': '4111111111111111',
+      'cvv': '111',
+      'expiry_month': '07',
+      'expiry_year': '14',
+      'first_name': 'first_name',
+      'last_name': 'last_name',
+      'sandbox': True
+  }
+  data.update(options)
+  return PaymentMethod.create(data.pop('card_number'),
+                              data.pop('cvv'),
+                              data.pop('expiry_month'),
+                              data.pop('expiry_year'),
+                              **data)

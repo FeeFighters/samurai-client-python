@@ -1,5 +1,9 @@
 import sys
-sys.path.append('..')
+# Fix import path.
+from os.path import abspath, dirname
+cur_dir = dirname(abspath(__file__))
+modules_dir = abspath('%s/..' % cur_dir)
+sys.path.append(modules_dir)
 
 import samurai.config as config
 from samurai.payment_method import PaymentMethod

@@ -15,6 +15,18 @@ from request import Request, fetch_url
 from api_base import ApiBase
 from transaction import Transaction
 
+class Descriptor(object):
+    """
+    Descriptor to enable both class and instance method calls.
+    """
+    def __init__(self, name):
+        self.name = name
+
+    def __get__(self, instance, cls):
+        if not instance:
+            instance = cls()
+        return getattr(instance, self.name)
+
 class Processor(ApiBase):
     """
     `Processor` deals with payments.
@@ -29,9 +41,15 @@ class Processor(ApiBase):
     purchase_optional_data = set(('billing_reference', 'customer_reference',
                                  'descriptor', 'custom'))
 
+    def __init__(self, processor_token=config.processor_token):
+        self.processor_token = processor_token
+
     @classmethod
-    def purchase(cls, payment_method_token, amount,
-                 processor_token=config.processor_token, **options):
+    def the_processor(cls):
+        return cls(config.processor_token)
+
+    purchase = Descriptor('_purchase')
+    def _purchase(self, payment_method_token, amount, processor_token=None, **options):
         """
         Makes a simple purchase call and returns a transaction object.
         ::
@@ -50,23 +68,23 @@ class Processor(ApiBase):
                                              custom=custom)
 
         """
-        return cls._transact(payment_method_token, amount, processor_token,
-                            'purchase', cls.purchase_url, options)
+        processor_token = getattr(self, 'processor_token', None) or config.processor_token
+        return self._transact(payment_method_token, amount, processor_token,
+                            'purchase', self.purchase_url, options)
 
-    @classmethod
-    def authorize(cls, payment_method_token, amount,
-                  processor_token=config.processor_token, **options):
+    authorize = Descriptor('_authorize')
+    def _authorize(self, payment_method_token, amount, **options):
         """
         `authorize` doesn't charge credit card. It only reserves the transaction amount.
         It returns a `Transaction` object which can be `captured` or `reversed`.
 
         It takes the same parameter as the `purchase` call.
         """
-        return cls._transact(payment_method_token, amount, processor_token,
-                            'authorize', cls.authorize_url, options)
+        processor_token = getattr(self, 'processor_token', None) or config.processor_token
+        return self._transact(payment_method_token, amount, processor_token,
+                            'authorize', self.authorize_url, options)
 
-    @classmethod
-    def _transact(cls, payment_method_token, amount, processor_token,
+    def _transact(self, payment_method_token, amount, processor_token,
                   transaction_type, endpoint, options):
         """
         Meant to be used internally and shouldn't be called from outside.
@@ -76,15 +94,14 @@ class Processor(ApiBase):
         `authorize` and `purchase` have same flow, except for `transaction_type` and
         `endpoint`.
         """
-        purchase_data = cls._construct_options(payment_method_token, transaction_type,
+        purchase_data = self._construct_options(payment_method_token, transaction_type,
                                               amount, options)
         # Send payload and return transaction.
         req = Request(endpoint % processor_token, purchase_data, method='post')
         req.add_header("Content-Type", "application/xml")
         return Transaction(fetch_url(req))
 
-    @classmethod
-    def _construct_options(cls, payment_method_token, transaction_type,
+    def _construct_options(self, payment_method_token, transaction_type,
                            amount, options):
         """
         Constructs XML payload to be sent for the transaction.
@@ -98,7 +115,7 @@ class Processor(ApiBase):
             }
         }
         options = dict((k, v) for k, v in options.iteritems()
-                       if k in cls.purchase_optional_data)
+                       if k in self.purchase_optional_data)
         options['payment_method_token'] = payment_method_token
         purchase_data['transaction'].update(options)
         purchase_data = dict_to_xml(purchase_data)

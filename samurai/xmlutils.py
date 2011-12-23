@@ -1,9 +1,10 @@
 """
-    Methods to work with XML.
+    xmldict
     ~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    Convert xml to python dictionaries.
 """
 import datetime
-from utils import str_to_datetime, str_to_boolean
 
 def xml_to_dict(root_or_str):
     """
@@ -20,29 +21,36 @@ def dict_to_xml(dict_xml):
     """
     Converts `dict_xml` which is a python dict to corresponding xml.
     """
-    return _xml_from_dict(dict_xml)
+    return _to_xml(dict_xml)
 
 # Functions below this line are implementation details.
 # Unless you are changing code, don't bother reading.
 # The functions above constitute the user interface.
 
-def _to_xml(tag, content):
-    if isinstance(content, dict):
-        val = '<%(tag)s>%(content)s</%(tag)s>' % dict(tag=tag,
-                                                      content=_xml_from_dict(content))
-    elif isinstance(content, bool):
-        val = '<%(tag)s>%(content)s</%(tag)s>' % dict(tag=tag, content=str(content).lower())
+def _to_xml(el):
+    """
+    Converts `el` to its xml representation.
+    """
+    val = None
+    if isinstance(el, dict):
+        val = _dict_to_xml(el)
+    elif isinstance(el, bool):
+        val = str(el).lower()
     else:
-        val = '<%(tag)s>%(content)s</%(tag)s>' % dict(tag=tag, content=content)
+        val = el
     return val
 
-def _xml_from_dict(dict_xml):
+def _dict_to_xml(els):
     """
-    Converts `dict_xml` which is a python dict to corresponding xml.
+    Converts `els` which is a python dict to corresponding xml.
     """
     tags = []
-    for tag, content in dict_xml.iteritems():
-        tags.append(_to_xml(tag, content))
+    for tag, content in els.iteritems():
+        if isinstance(content, list):
+            for el in content:
+                tags.append('<%s>%s</%s>' % (tag, _to_xml(el), tag))
+        else:
+            tags.append('<%s>%s</%s>' % (tag, _to_xml(content), tag))
     return ''.join(tags)
 
 def _is_xml_el_dict(el):
@@ -60,6 +68,18 @@ def _is_xml_el_list(el):
     This function makes sense only in the context of making lists out of xml.
     """
     if len(el) > 1 and el[0].tag == el[1].tag:
+        return True
+    return False
+
+def _str_to_datetime(date_str):
+    try:
+        val = datetime.datetime.strptime(date_str,  "%Y-%m-%dT%H:%M:%SZ")
+    except ValueError:
+        val = date_str
+    return val
+
+def _str_to_boolean(bool_str):
+    if bool_str.lower() != 'false' and bool(bool_str):
         return True
     return False
 
@@ -97,8 +117,8 @@ def _val_and_maybe_convert(el):
     else:
         return text
 _val_and_maybe_convert.convertors = {
-    'boolean': str_to_boolean,
-    'datetime': str_to_datetime,
+    'boolean': _str_to_boolean,
+    'datetime': _str_to_datetime,
     'integer': int
 }
 

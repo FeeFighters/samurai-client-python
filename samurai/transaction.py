@@ -102,7 +102,7 @@ class Transaction(ApiBase):
         """
         Returns True if the transaction succeeded.
 
-        You are better of checking `trans.errors`
+        You are better off checking `trans.errors`
 
         """
         if (getattr(self, 'processor_response') and self.processor_response.get('success')

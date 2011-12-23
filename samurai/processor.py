@@ -68,19 +68,21 @@ class Processor(ApiBase):
                                              custom=custom)
 
         """
-        processor_token = getattr(self, 'processor_token', None) or config.processor_token
+        if not processor_token:
+            processor_token = getattr(self, 'processor_token', None) or config.processor_token
         return self._transact(payment_method_token, amount, processor_token,
                             'purchase', self.purchase_url, options)
 
     authorize = Descriptor('_authorize')
-    def _authorize(self, payment_method_token, amount, **options):
+    def _authorize(self, payment_method_token, amount, processor_token=None, **options):
         """
         `authorize` doesn't charge credit card. It only reserves the transaction amount.
         It returns a `Transaction` object which can be `captured` or `reversed`.
 
         It takes the same parameter as the `purchase` call.
         """
-        processor_token = getattr(self, 'processor_token', None) or config.processor_token
+        if not processor_token:
+            processor_token = getattr(self, 'processor_token', None) or config.processor_token
         return self._transact(payment_method_token, amount, processor_token,
                             'authorize', self.authorize_url, options)
 

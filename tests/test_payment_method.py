@@ -211,16 +211,6 @@ class TestPaymentMethod(unittest.TestCase):
         err = {'context': 'input.card_number', 'key': 'too_long', 'subclass': 'error'}
         assert err in pm.errors
 
-    # This test case fails and return last_four_digits as '1111'. 
-    # Need to confirm with Josh
-    #def test_should_fail_on_blank_card_number(self):
-    #    params_tmp = paramsx
-    #    params_tmp['card_number'] =  ''
-    #    pm = self.pm.update(**params_tmp)
-    #    assert pm.is_sensitive_data_valid == False
-    #    err = {'context': 'input.card_number', 'key': 'is_blank', 'subclass': 'error'}
-    #    assert err in pm.errors
-
     def test_update_should_return_too_short_card_number(self):
         pm = self.pm.update(card_number='4111-1')
         assert pm.is_sensitive_data_valid == False

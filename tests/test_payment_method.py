@@ -332,7 +332,7 @@ class TestPaymentMethod(unittest.TestCase):
 
     def test_find_should_fail_on_an_invalid_token(self):
         pm = PaymentMethod.find('abc123')
-        err = {'context': 'input.expiry_year', 'key': 'is_invalid', 'subclass': 'error'}
+        err = "Couldn't find PaymentMethod with token = abc123"
         assert err in pm.errors
 
     def test_retain(self):

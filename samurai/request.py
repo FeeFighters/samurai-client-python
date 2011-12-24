@@ -15,10 +15,10 @@ class Request(urllib2.Request):
     """
     def __init__(self, url, data=None, headers={},
                  origin_req_host=None, unverifiable=False, method=None):
-       if data:                     
+       if data:
           headers['Content-Type'] = 'text/xml'
        urllib2.Request.__init__(self, url, data, headers, origin_req_host, unverifiable)
-       self.method = method.upper()
+       self.method = method and method.upper() or None
 
     def get_method(self):
         if self.method:

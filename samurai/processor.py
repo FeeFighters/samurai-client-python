@@ -54,7 +54,8 @@ class Processor(ApiBase):
     authorize_url = 'https://api.samurai.feefighters.com/v1/processors/%s/authorize.xml'
 
     purchase_optional_data = set(('billing_reference', 'customer_reference',
-                                 'descriptor', 'custom'))
+                                 'descriptor', 'custom', 'description',
+                                 'descriptor_name', 'descriptor_phone'))
 
     def __init__(self, processor_token):
         self.processor_token = processor_token

@@ -64,14 +64,15 @@ class Message(object):
         'error input.expiry_year is_invalid'      : 'The expiration year was invalid.',
     }
 
+    response_mappings = None
     @classmethod
     def get_response_mappings(cls):
-        getattr(cls, 'response_mappings', None) or cls.DEFAULT_RESPONSE_MAPPINGS
+        getattr(cls, 'response_mappings') or cls.DEFAULT_RESPONSE_MAPPINGS
 
     @classmethod
     def set_response_mappings(cls, mappings):
-        if not getattr(cls, 'response_mappings', None):
-            cls._response_mappings = cls.DEFAULT_RESPONSE_MAPPINGS
+        if not getattr(cls, 'response_mappings'):
+            cls.response_mappings = cls.DEFAULT_RESPONSE_MAPPINGS
         cls.response_mappings.update(mappings)
 
     def description(self):

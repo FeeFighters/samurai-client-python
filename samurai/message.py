@@ -64,17 +64,21 @@ class Message(object):
         'error input.expiry_year is_invalid'      : 'The expiration year was invalid.',
     }
 
-    _response_mappings = None
+    def __init__(self, subclass, context, key):
+        self.subclass = subclass
+        self.context = context
+        self.key = key
+
+    _response_mappings = DEFAULT_RESPONSE_MAPPINGS
     @classmethod
     def get_response_mappings(cls):
-        getattr(cls, '_response_mappings') or cls.DEFAULT_RESPONSE_MAPPINGS
+        return cls._response_mappings
 
     @classmethod
     def set_response_mappings(cls, mappings):
-        if not getattr(cls, '_response_mappings'):
-            cls._response_mappings = cls.DEFAULT_RESPONSE_MAPPINGS
         cls._response_mappings.update(mappings)
 
+    @property
     def description(self):
-        mapping_key = ''.join([self.subclass, self.context, self.key])
+        mapping_key = ' '.join([self.subclass, self.context, self.key])
         return self._response_mappings.get(mapping_key, '')

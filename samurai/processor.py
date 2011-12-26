@@ -24,8 +24,23 @@ class Descriptor(object):
 
     def __get__(self, instance, cls):
         if not instance:
-            instance = cls()
+            instance = cls.the_processor
         return getattr(instance, self.name)
+
+class TheProcessor(object):
+    """
+    Constructs default processor.
+    """
+    def __init__(self, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+
+    def __get__(self, instance, cls):
+        """
+        This embodies the 'default processor' construction logic.
+        Currently the only detail needed for 'default processor' is the processor token.
+        """
+        return cls(*self.args, **self.kwargs)
 
 class Processor(ApiBase):
     """
@@ -42,12 +57,11 @@ class Processor(ApiBase):
                                  'descriptor', 'custom', 'description',
                                  'descriptor_name', 'descriptor_phone'))
 
-    def __init__(self, processor_token=config.processor_token):
+    def __init__(self, processor_token):
         self.processor_token = processor_token
 
-    @classmethod
-    def the_processor(cls):
-        return cls(config.processor_token)
+    #: The default processor.
+    the_processor = TheProcessor(processor_token=config.processor_token)
 
     purchase = Descriptor('_purchase')
     def _purchase(self, payment_method_token, amount, processor_token=None, **options):

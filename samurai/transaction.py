@@ -186,10 +186,7 @@ class Transaction(ApiBase):
         if not getattr(self, 'transaction_token', None):
             raise UnauthorizedTransactionError('Transaction token is missing. Only authorized'
                                                'transactions can make this call.')
-        if amount:
-            data = dict_to_xml({'transaction':{'amount': amount}})
-            req = Request(endpoint % self.transaction_token, data, method='post')
-        else:
-            req = Request(endpoint % self.transaction_token, method='post')
+        data = dict_to_xml({'transaction':{'amount': amount}})
+        req = Request(endpoint % self.transaction_token, data, method='post')
         res = fetch_url(req)
         return type(self)(res)

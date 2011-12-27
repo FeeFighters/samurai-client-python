@@ -4,6 +4,7 @@
 
     Abstraction for behavior common to other api objects.
 """
+from message import Message
 from xmlutils import xml_to_dict
 
 class ApiBase(object):
@@ -15,7 +16,8 @@ class ApiBase(object):
     """
 
     def __init__(self):
-        self.errors = []
+        self.error_messages = []
+        self.errors = {}
 
     def _message_block(self, parsed_res):
         """
@@ -35,7 +37,7 @@ class ApiBase(object):
             error = True
             if parsed_res['error'].get('messages') and parsed_res['error']['messages'].get('message'):
                 message = parsed_res['error']['messages']['message']
-                self.errors = message if isinstance(message, list) else [message]
+                self.error_messages = message if isinstance(message, list) else [message]
         return error
 
     def _check_semantic_errors(self, parsed_res):
@@ -51,8 +53,18 @@ class ApiBase(object):
             elif isinstance(message, dict):
                 error = True if message.get('subclass') == 'error' else False
             if error:
-                self.errors = message if isinstance(message, list) else [message]
-                self.errors = filter(lambda m: m['subclass']=='error', self.errors)
+                self.error_messages = message if isinstance(message, list) else [message]
+                self.error_messages = filter(lambda m: m['subclass']=='error', self.error_messages)
+
+    def _populate_readable_messages(self):
+        """
+        Converts server error messages to human readable descriptions and stores it in `self.errors`
+        """
+        for m in self.error_messages:
+            if isinstance(m, dict) and m.get('context') and not self.errors.get(m['context']):
+                self.errors[m['context']] = Message.readable_description(m['subclass'], m['context'],
+                                                                         m['key'])
+
 
     def _update_fields(self, xml_res):
         """
@@ -62,4 +74,5 @@ class ApiBase(object):
         if not self._check_for_errors(parsed_res) and parsed_res.get(self.top_xml_key):
             self.__dict__.update(**parsed_res[self.top_xml_key])
             self._check_semantic_errors(parsed_res)
-
+        if self.error_messages:
+            self._populate_readable_messages()

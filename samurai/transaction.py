@@ -93,8 +93,8 @@ class Transaction(ApiBase):
                 message_block = self._message_block(parsed_res)
                 if message_block and message_block.get('message'):
                     message = message_block['message']
-                    self.errors = message if isinstance(message, list) else [message]
-                    self.errors = filter(lambda m: m['subclass']=='error', self.errors)
+                    self.error_messages = message if isinstance(message, list) else [message]
+                    self.error_messages = filter(lambda m: m['subclass']=='error', self.error_messages)
                 return True
         return super(Transaction, self)._check_semantic_errors(parsed_res)
 
@@ -102,7 +102,7 @@ class Transaction(ApiBase):
         """
         Returns True if the transaction succeeded.
 
-        You are better of checking `trans.errors`
+        You are better off checking `trans.errors`
 
         """
         if (getattr(self, 'processor_response') and self.processor_response.get('success')
@@ -123,7 +123,7 @@ class Transaction(ApiBase):
                        and m.get('key') == 'declined')
         return False
 
-    def capture(self, amount):
+    def capture(self, amount=None):
         """
         Captures transaction. Works only if the transaction is authorized.
 
@@ -139,7 +139,7 @@ class Transaction(ApiBase):
         """
         return self._transact(self.capture_url, amount)
 
-    def credit(self, amount):
+    def credit(self, amount=None):
         """
         Credits transaction. Works only if the transaction is authorized.
         Depending on the settlement status of the transaction, and the behavior of the
@@ -186,10 +186,7 @@ class Transaction(ApiBase):
         if not getattr(self, 'transaction_token', None):
             raise UnauthorizedTransactionError('Transaction token is missing. Only authorized'
                                                'transactions can make this call.')
-        if amount:
-            data = dict_to_xml({'transaction':{'amount': amount}})
-            req = Request(endpoint % self.transaction_token, data, method='post')
-        else:
-            req = Request(endpoint % self.transaction_token, method='post')
+        data = dict_to_xml({'transaction':{'amount': amount}})
+        req = Request(endpoint % self.transaction_token, data, method='post')
         res = fetch_url(req)
         return type(self)(res)

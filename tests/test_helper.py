@@ -16,13 +16,23 @@ config.debug = True
 def default_payment_method(options={}):
   data = {
       'card_number': '4111111111111111',
-      'cvv': '111',
-      'expiry_month': '07',
-      'expiry_year': '14',
-      'first_name': 'first_name',
-      'last_name': 'last_name',
-      'sandbox': True
-  }
+      'sandbox' : True,
+      'redirect_url' : 'http://test.host',
+      'merchant_key' : config.merchant_key,
+      'custom' : 'custom',
+      'first_name' : 'FirstName',
+      'last_name' : 'LastName',
+      'address_1' : '1000 1st Av',
+      'address_2' : '',
+      'city' : 'Chicago',
+      'state' : 'IL',
+      'zip' : '10101',
+      'card_number' : '4111111111111111',
+      'cvv' : '111',
+      'expiry_month' : '05',
+      'expiry_year' : '2014',
+    }
+
   data.update(options)
   return PaymentMethod.create(data.pop('card_number'),
                               data.pop('cvv'),

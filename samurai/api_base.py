@@ -4,6 +4,8 @@
 
     Abstraction for behavior common to other api objects.
 """
+from collections import defaultdict
+
 from message import Message
 from xmlutils import xml_to_dict
 
@@ -17,7 +19,7 @@ class ApiBase(object):
 
     def __init__(self):
         self.error_messages = []
-        self.errors = {}
+        self.errors = defaultdict(list)
 
     def _message_block(self, parsed_res):
         """
@@ -61,9 +63,11 @@ class ApiBase(object):
         Converts server error messages to human readable descriptions and stores it in `self.errors`
         """
         for m in self.error_messages:
-            if isinstance(m, dict) and m.get('context') and not self.errors.get(m['context']):
-                self.errors[m['context']] = Message.readable_description(m['subclass'], m['context'],
-                                                                         m['key'])
+            if isinstance(m, dict) and m.get('context'):
+                description =  Message.readable_description(m['subclass'], m['context'],
+                                                            m['key'])
+                if description not in self.errors[m['context']]:
+                    self.errors[m['context']].append(description)
 
 
     def _update_fields(self, xml_res):

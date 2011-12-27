@@ -123,7 +123,7 @@ class Transaction(ApiBase):
                        and m.get('key') == 'declined')
         return False
 
-    def capture(self, amount):
+    def capture(self, amount=None):
         """
         Captures transaction. Works only if the transaction is authorized.
 
@@ -139,7 +139,7 @@ class Transaction(ApiBase):
         """
         return self._transact(self.capture_url, amount)
 
-    def credit(self, amount):
+    def credit(self, amount=None):
         """
         Credits transaction. Works only if the transaction is authorized.
         Depending on the settlement status of the transaction, and the behavior of the

@@ -270,7 +270,7 @@ class TestPaymentMethod(unittest.TestCase):
         self.assertFalse(pm.is_sensitive_data_valid)
         err = {'context': 'input.cvv', 'key': 'too_short', 'subclass': 'error'}
         self.assertIn(err, pm.error_messages)
-        self.assertIn('The CVV was invalid.', pm.errors['input.cvv'])
+        self.assertIn('The CVV was too short.', pm.errors['input.cvv'])
 
     #
     # Test failure on input.expiry_month

@@ -11,43 +11,43 @@ class TestTransaction(unittest.TestCase):
         self.auth = Processor.authorize(self.pm.payment_method_token, 100.0)
         self.purchase = Processor.purchase(self.pm.payment_method_token, 100.0)
 
-    # Verify on console. No data sent in case amount=None. Confirm with Rahul/Josh
-    #def test_capture_should_be_successful(self):
-    #    capture = self.auth.capture()
-    #    self.assertTrue(capture.success)
-    #    self.assertEquals(capture.errors, [])
+    def test_capture_should_be_successful(self):
+        capture = self.auth.capture()
+        self.assertTrue(capture.success)
+        self.assertEquals(capture.error_messages, [])
 
     def test_capture_should_be_successful_for_full_amount(self):
         capture = self.auth.capture(100.0)
         self.assertTrue(capture.success)
-        self.assertEquals(capture.errors, [])
+        self.assertEquals(capture.error_messages, [])
 
     def test_capture_should_be_successful_for_partial_amount(self):
         capture = self.auth.capture(50.0)
         self.assertTrue(capture.success)
-        self.assertEquals(capture.errors, [])
+        self.assertEquals(capture.error_messages, [])
 
-    # Verify on console. No data sent in case amount=None. Confirm with Rahul/Josh
-    #def test_capture_should_return_processor_transaction_invalid_with_declined_auth(self):
-    #    auth = Processor.authorize(self.pm.payment_method_token, 100.02)  # declined auth
-    #    capture = auth.capture()
-    #    self.assertFalse(capture.success)
-    #    err = {'context': 'processor.transaction', 'key': 'not_allowed', 'subclass': 'error'}
-    #    self.assertIn(err, capture.errors)
+    def test_capture_should_return_processor_transaction_invalid_with_declined_auth(self):
+        auth = Processor.authorize(self.pm.payment_method_token, 100.02)  # declined auth
+        capture = auth.capture()
+        self.assertFalse(capture.success)
+        err = {'context': 'processor.transaction', 'key': 'not_allowed', 'subclass': 'error'}
+        self.assertIn(err, capture.error_messages)
 
     def test_capture_should_return_processor_transaction_declined(self):
         auth = Processor.authorize(self.pm.payment_method_token, 100.00)
         capture = auth.capture(100.02)
         self.assertFalse(capture.success)
         err = {'context': 'processor.transaction', 'key': 'declined', 'subclass': 'error'}
-        self.assertIn(err, capture.errors)
+        self.assertIn(err, capture.error_messages)
+        self.assertIn('The card was declined.', capture.errors['processor.transaction'])
 
     def test_capture_should_return_input_amount_invalid(self):
         auth = Processor.authorize(self.pm.payment_method_token, 100.00)
         capture = auth.capture(100.10)
         self.assertFalse(capture.success)
         err = {'context': 'input.amount', 'key': 'invalid', 'subclass': 'error'}
-        self.assertIn(err, capture.errors)
+        self.assertIn(err, capture.error_messages)
+        self.assertIn('The transaction amount was invalid.', capture.errors['input.amount'])
 
     def test_reverse_capture_should_be_successful(self):
         reverse = self.purchase.reverse()
@@ -69,12 +69,12 @@ class TestTransaction(unittest.TestCase):
         reverse = self.purchase.reverse(100.10)
         self.assertFalse(reverse.success)
         err = {'context': 'input.amount', 'key': 'invalid', 'subclass': 'error'}
-        self.assertIn(err, reverse.errors)
+        self.assertIn(err, reverse.error_messages)
+        self.assertIn('The transaction amount was invalid.', reverse.errors['input.amount'])
 
-    # Verify on console. No data sent in case amount=None. Confirm with Rahul/Josh
-    #def test_credit_capture_should_be_successful(self):
-    #    credit = self.purchase.credit()
-    #    self.assertTrue(credit.success)
+    def test_credit_capture_should_be_successful(self):
+        credit = self.purchase.credit()
+        self.assertTrue(credit.success)
 
     def test_credit_capture_should_be_successful_for_full_amount(self):
         credit = self.purchase.credit(100.0)
@@ -84,16 +84,16 @@ class TestTransaction(unittest.TestCase):
         credit = self.purchase.credit(50.0)
         self.assertTrue(credit.success)
 
-    # Verify on console. No data sent in case amount=None. Confirm with Rahul/Josh
-    #def test_credit_authorize_should_be_successful(self):
-    #    credit = self.auth.credit()
-    #    self.assertTrue(credit.success)
+    def test_credit_authorize_should_be_successful(self):
+        credit = self.auth.credit()
+        self.assertTrue(credit.success)
 
     def test_credit_failure_should_return_input_amount_invalid(self):
         credit = self.purchase.credit(100.10)
         self.assertFalse(credit.success)
         err = {'context': 'input.amount', 'key': 'invalid', 'subclass': 'error'}
-        self.assertIn(err, credit.errors)
+        self.assertIn(err, credit.error_messages)
+        self.assertIn('The transaction amount was invalid.', credit.errors['input.amount'])
 
     def test_void_capture_should_be_successful(self):
         void = self.purchase.void()

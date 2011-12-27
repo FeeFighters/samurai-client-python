@@ -10,7 +10,7 @@ class TestProcessor(unittest.TestCase):
         self.rand = randint(100, 999)
 
     def test_should_return_the_default_processor(self):
-        processor = Processor.the_processor()
+        processor = Processor.the_processor
         self.assertNotEqual(processor, None)
         self.assertEqual(processor.processor_token, config.processor_token)
 
@@ -29,7 +29,7 @@ class TestProcessor(unittest.TestCase):
         token = self.pm.payment_method_token
         purchase = Processor.purchase(token, 10.0, None, **options)
         self.assertTrue(purchase.success)
-        self.assertEquals(purchase.errors, [])
+        self.assertEquals(purchase.error_messages, [])
         self.assertEqual(purchase.description, 'description')
         self.assertEqual(purchase.descriptor_name, 'descriptor_name')
         self.assertEqual(purchase.descriptor_phone, 'descriptor_phone')
@@ -44,7 +44,8 @@ class TestProcessor(unittest.TestCase):
                                       billing_reference=self.rand)
         self.assertFalse(purchase.success)
         err = {'context': 'processor.transaction', 'key': 'declined', 'subclass': 'error'}
-        self.assertIn(err, purchase.errors)
+        self.assertIn(err, purchase.error_messages)
+        self.assertIn('The card was declined.' , purchase.errors['processor.transaction'])
 
     def test_purchase_should_return_input_amount_invalid(self):
         token = self.pm.payment_method_token
@@ -53,7 +54,8 @@ class TestProcessor(unittest.TestCase):
                                       billing_reference=self.rand)
         self.assertFalse(purchase.success)
         err = {'context': 'input.amount', 'key': 'invalid', 'subclass': 'error'}
-        self.assertIn(err, purchase.errors)
+        self.assertIn(err, purchase.error_messages)
+        self.assertIn('The transaction amount was invalid.', purchase.errors['input.amount'])
 
     def test_cvv_should_return_processor_cvv_result_code_M(self):
         token = test_helper.default_payment_method({'cvv':'111'}).payment_method_token
@@ -113,7 +115,7 @@ class TestProcessor(unittest.TestCase):
         token = self.pm.payment_method_token
         purchase = Processor.authorize(token, 100.0, None, **options)
         self.assertTrue(purchase.success)
-        self.assertEquals(purchase.errors, [])
+        self.assertEquals(purchase.error_messages, [])
         self.assertEqual(purchase.description, 'description')
         self.assertEqual(purchase.descriptor_name, 'descriptor_name')
         self.assertEqual(purchase.descriptor_phone, 'descriptor_phone')
@@ -128,7 +130,8 @@ class TestProcessor(unittest.TestCase):
                                       billing_reference=self.rand)
         self.assertFalse(purchase.success)
         err = {'context': 'processor.transaction', 'key': 'declined', 'subclass': 'error'}
-        self.assertIn(err, purchase.errors)
+        self.assertIn(err, purchase.error_messages)
+        self.assertIn('The card was declined.' , purchase.errors['processor.transaction'])
 
     def test_authorize_should_return_input_amount_invalid(self):
         token = self.pm.payment_method_token
@@ -137,7 +140,8 @@ class TestProcessor(unittest.TestCase):
                                       billing_reference=self.rand)
         self.assertFalse(purchase.success)
         err = {'context': 'input.amount', 'key': 'invalid', 'subclass': 'error'}
-        self.assertIn(err, purchase.errors)
+        self.assertIn(err, purchase.error_messages)
+        self.assertIn('The transaction amount was invalid.', purchase.errors['input.amount'])
 
     def test_authorize_should_return_processor_cvv_result_code_M(self):
         token = test_helper.default_payment_method({'cvv':'111'}).payment_method_token

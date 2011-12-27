@@ -93,8 +93,8 @@ class Transaction(ApiBase):
                 message_block = self._message_block(parsed_res)
                 if message_block and message_block.get('message'):
                     message = message_block['message']
-                    self.errors = message if isinstance(message, list) else [message]
-                    self.errors = filter(lambda m: m['subclass']=='error', self.errors)
+                    self.error_messages = message if isinstance(message, list) else [message]
+                    self.error_messages = filter(lambda m: m['subclass']=='error', self.error_messages)
                 return True
         return super(Transaction, self)._check_semantic_errors(parsed_res)
 

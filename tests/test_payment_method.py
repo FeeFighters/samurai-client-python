@@ -62,7 +62,8 @@ class TestPaymentMethod(unittest.TestCase):
         pm = PaymentMethod.create(**params_tmp)
         self.assertFalse(pm.is_sensitive_data_valid)
         err = {'context': 'input.card_number', 'key': 'is_blank', 'subclass': 'error'}
-        self.assertIn(err, pm.errors)
+        self.assertIn(err, pm.error_messages)
+        self.assertIn('The card number was blank.', pm.errors['input.card_number'])
 
     def test_should_return_too_short_card_number(self):
         params_tmp = params
@@ -70,7 +71,8 @@ class TestPaymentMethod(unittest.TestCase):
         pm = PaymentMethod.create(**params_tmp)
         self.assertFalse(pm.is_sensitive_data_valid)
         err = {'context': 'input.card_number', 'key': 'too_short', 'subclass': 'error'}
-        self.assertIn(err, pm.errors)
+        self.assertIn(err, pm.error_messages)
+        self.assertIn('The card number was too short.', pm.errors['input.card_number'])
 
     def test_should_return_too_long_card_number(self):
         params_tmp = params
@@ -78,7 +80,8 @@ class TestPaymentMethod(unittest.TestCase):
         pm = PaymentMethod.create(**params_tmp)
         self.assertFalse(pm.is_sensitive_data_valid)
         err = {'context': 'input.card_number', 'key': 'too_long', 'subclass': 'error'}
-        self.assertIn(err, pm.errors)
+        self.assertIn(err, pm.error_messages)
+        self.assertIn('The card number was too long.', pm.errors['input.card_number'])
 
     def test_should_return_failed_checksum_card_number(self):
         params_tmp = params
@@ -86,7 +89,8 @@ class TestPaymentMethod(unittest.TestCase):
         pm = PaymentMethod.create(**params_tmp)
         self.assertFalse(pm.is_sensitive_data_valid)
         err = {'context': 'input.card_number', 'key': 'failed_checksum', 'subclass': 'error'}
-        self.assertIn(err, pm.errors)
+        self.assertIn(err, pm.error_messages)
+        self.assertIn('The card number was invalid.', pm.errors['input.card_number'])
 
 
     #
@@ -99,7 +103,8 @@ class TestPaymentMethod(unittest.TestCase):
         pm = PaymentMethod.create(**params_tmp)
         self.assertFalse(pm.is_sensitive_data_valid)
         err = {'context': 'input.cvv', 'key': 'too_short', 'subclass': 'error'}
-        self.assertIn(err, pm.errors)
+        self.assertIn(err, pm.error_messages)
+        self.assertIn('The CVV was too short.', pm.errors['input.cvv'])
 
     def test_should_return_too_long_cvv(self):
         params_tmp = params
@@ -107,7 +112,8 @@ class TestPaymentMethod(unittest.TestCase):
         pm = PaymentMethod.create(**params_tmp)
         self.assertFalse(pm.is_sensitive_data_valid)
         err = {'context': 'input.cvv', 'key': 'too_long', 'subclass': 'error'}
-        self.assertIn(err, pm.errors)
+        self.assertIn(err, pm.error_messages)
+        self.assertIn('The CVV was too long.', pm.errors['input.cvv'])
 
     def test_should_return_not_numeric_cvv(self):
         params_tmp = params
@@ -115,7 +121,8 @@ class TestPaymentMethod(unittest.TestCase):
         pm = PaymentMethod.create(**params_tmp)
         self.assertFalse(pm.is_sensitive_data_valid)
         err = {'context': 'input.cvv', 'key': 'not_numeric', 'subclass': 'error'}
-        self.assertIn(err, pm.errors)
+        self.assertIn(err, pm.error_messages)
+        self.assertIn('The CVV was invalid.', pm.errors['input.cvv'])
 
     #
     # Test failure on input.expiry_month
@@ -128,7 +135,8 @@ class TestPaymentMethod(unittest.TestCase):
         self.assertFalse(pm.is_sensitive_data_valid)
         self.assertFalse(pm.is_expiration_valid)
         err = {'context': 'input.expiry_month', 'key': 'is_blank', 'subclass': 'error'}
-        self.assertIn(err, pm.errors)
+        self.assertIn(err, pm.error_messages)
+        self.assertIn('The expiration month was blank.', pm.errors['input.expiry_month'])
 
     def test_should_return_is_invalid(self):
         params_tmp = params
@@ -137,7 +145,8 @@ class TestPaymentMethod(unittest.TestCase):
         self.assertFalse(pm.is_sensitive_data_valid)
         self.assertFalse(pm.is_expiration_valid)
         err = {'context': 'input.expiry_month', 'key': 'is_invalid', 'subclass': 'error'}
-        self.assertIn(err, pm.errors)
+        self.assertIn(err, pm.error_messages)
+        self.assertIn('The expiration month was invalid.', pm.errors['input.expiry_month'])
 
     #
     # Test failure on input.expiry_year
@@ -150,7 +159,8 @@ class TestPaymentMethod(unittest.TestCase):
         self.assertFalse(pm.is_sensitive_data_valid)
         self.assertFalse(pm.is_expiration_valid)
         err = {'context': 'input.expiry_year', 'key': 'is_blank', 'subclass': 'error'}
-        self.assertIn(err, pm.errors)
+        self.assertIn(err, pm.error_messages)
+        self.assertIn('The expiration year was blank.', pm.errors['input.expiry_year'])
 
     def test_should_return_is_invalid_expiry_year(self):
         params_tmp = params
@@ -159,7 +169,8 @@ class TestPaymentMethod(unittest.TestCase):
         self.assertFalse(pm.is_sensitive_data_valid)
         self.assertFalse(pm.is_expiration_valid)
         err = {'context': 'input.expiry_year', 'key': 'is_invalid', 'subclass': 'error'}
-        self.assertIn(err, pm.errors)
+        self.assertIn(err, pm.error_messages)
+        self.assertIn('The expiration year was invalid.', pm.errors['input.expiry_year'])
 
     #
     # S2SUpdate
@@ -208,13 +219,15 @@ class TestPaymentMethod(unittest.TestCase):
         pm = self.pm.update(**params_tmp)
         self.assertFalse(pm.is_sensitive_data_valid)
         err = {'context': 'input.card_number', 'key': 'too_long', 'subclass': 'error'}
-        self.assertIn(err, pm.errors)
+        self.assertIn(err, pm.error_messages)
+        self.assertIn('The card number was too long.', pm.errors['input.card_number'])
 
     def test_update_should_return_too_short_card_number(self):
         pm = self.pm.update(card_number='4111-1')
         self.assertFalse(pm.is_sensitive_data_valid)
         err = {'context': 'input.card_number', 'key': 'too_short', 'subclass': 'error'}
-        self.assertIn(err, pm.errors)
+        self.assertIn(err, pm.error_messages)
+        self.assertIn('The card number was too short.', pm.errors['input.card_number'])
 
     def test_update_should_return_failed_checksum_card_number(self):
         params_tmp = paramsx
@@ -222,7 +235,9 @@ class TestPaymentMethod(unittest.TestCase):
         pm = self.pm.update(**params_tmp)
         self.assertFalse(pm.is_sensitive_data_valid)
         err = {'context': 'input.card_number', 'key': 'failed_checksum', 'subclass': 'error'}
-        self.assertIn(err, pm.errors)
+        self.assertIn(err, pm.error_messages)
+        self.assertIn('The card number was invalid.', pm.errors['input.card_number'])
+
 
     #
     # Test failure on input.cvv
@@ -234,7 +249,8 @@ class TestPaymentMethod(unittest.TestCase):
         pm = self.pm.update(**params_tmp)
         self.assertFalse(pm.is_sensitive_data_valid)
         err = {'context': 'input.cvv', 'key': 'too_short', 'subclass': 'error'}
-        self.assertIn(err, pm.errors)
+        self.assertIn(err, pm.error_messages)
+        self.assertIn('The CVV was too short.', pm.errors['input.cvv'])
 
     def test_update_should_return_too_long_cvv(self):
         params_tmp = paramsx
@@ -242,7 +258,8 @@ class TestPaymentMethod(unittest.TestCase):
         pm = self.pm.update(**params_tmp)
         self.assertFalse(pm.is_sensitive_data_valid)
         err = {'context': 'input.cvv', 'key': 'too_long', 'subclass': 'error'}
-        self.assertIn(err, pm.errors)
+        self.assertIn(err, pm.error_messages)
+        self.assertIn('The CVV was too long.', pm.errors['input.cvv'])
 
 
     # returns too_short, should return not_numeric
@@ -252,7 +269,8 @@ class TestPaymentMethod(unittest.TestCase):
         pm = self.pm.update(**params_tmp)
         self.assertFalse(pm.is_sensitive_data_valid)
         err = {'context': 'input.cvv', 'key': 'too_short', 'subclass': 'error'}
-        self.assertIn(err, pm.errors)
+        self.assertIn(err, pm.error_messages)
+        self.assertIn('The CVV was invalid.', pm.errors['input.cvv'])
 
     #
     # Test failure on input.expiry_month
@@ -265,7 +283,8 @@ class TestPaymentMethod(unittest.TestCase):
         self.assertFalse(pm.is_sensitive_data_valid)
         self.assertFalse(pm.is_expiration_valid)
         err = {'context': 'input.expiry_month', 'key': 'is_blank', 'subclass': 'error'}
-        self.assertIn(err, pm.errors)
+        self.assertIn(err, pm.error_messages)
+        self.assertIn('The expiration month was blank.', pm.errors['input.expiry_month'])
 
     def test_update_should_return_is_invalid(self):
         params_tmp = paramsx
@@ -274,7 +293,8 @@ class TestPaymentMethod(unittest.TestCase):
         self.assertFalse(pm.is_sensitive_data_valid)
         self.assertFalse(pm.is_expiration_valid)
         err = {'context': 'input.expiry_month', 'key': 'is_invalid', 'subclass': 'error'}
-        self.assertIn(err, pm.errors)
+        self.assertIn(err, pm.error_messages)
+        self.assertIn('The expiration month was invalid.', pm.errors['input.expiry_month'])
 
     #
     # Test failure on input.expiry_year
@@ -287,7 +307,8 @@ class TestPaymentMethod(unittest.TestCase):
         self.assertFalse(pm.is_sensitive_data_valid)
         self.assertFalse(pm.is_expiration_valid)
         err = {'context': 'input.expiry_year', 'key': 'is_blank', 'subclass': 'error'}
-        self.assertIn(err, pm.errors)
+        self.assertIn(err, pm.error_messages)
+        self.assertIn('The expiration year was blank.', pm.errors['input.expiry_year'])
 
     def test_update_should_return_is_invalid_expiry_year(self):
         params_tmp = paramsx
@@ -296,7 +317,8 @@ class TestPaymentMethod(unittest.TestCase):
         self.assertFalse(pm.is_sensitive_data_valid)
         self.assertFalse(pm.is_expiration_valid)
         err = {'context': 'input.expiry_year', 'key': 'is_invalid', 'subclass': 'error'}
-        self.assertIn(err, pm.errors)
+        self.assertIn(err, pm.error_messages)
+        self.assertIn('The expiration year was invalid.', pm.errors['input.expiry_year'])
 
     #
     #find
@@ -322,7 +344,7 @@ class TestPaymentMethod(unittest.TestCase):
     def test_find_should_fail_on_an_invalid_token(self):
         pm = PaymentMethod.find('abc123')
         err = "Couldn't find PaymentMethod with token = abc123"
-        self.assertIn(err, pm.errors)
+        self.assertIn(err, pm.error_messages)
 
     def test_retain(self):
         pm = self.pm.retain()

@@ -80,5 +80,9 @@ class Message(object):
 
     @property
     def description(self):
-        mapping_key = ' '.join([self.subclass, self.context, self.key])
-        return self._response_mappings.get(mapping_key, '')
+        return self.readable_description(self.subclass, self.context, self.key)
+
+    @classmethod
+    def readable_description(cls, subclass, context, key):
+        mapping_key = ' '.join([subclass, context, key])
+        return cls._response_mappings.get(mapping_key, '')

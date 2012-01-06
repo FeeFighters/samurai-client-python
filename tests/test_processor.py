@@ -92,8 +92,7 @@ class TestProcessor(unittest.TestCase):
                                       1.00,
                                       billing_reference=self.rand)
         self.assertTrue(purchase.success)
-        #assert purchase.processor_response['avs_result_code'] == 'Z'
-        self.assertEqual(purchase.processor_response['avs_result_code'], 'X')
+        self.assertEqual(purchase.processor_response['avs_result_code'], 'Z')
 
     def test_should_return_processor_avs_result_code_N(self):
         token = test_helper.default_payment_method({'address_1':'123 Main St',
@@ -177,8 +176,7 @@ class TestProcessor(unittest.TestCase):
                                       1.00,
                                       billing_reference=self.rand)
         self.assertTrue(purchase.success)
-        #assert purchase.processor_response['avs_result_code'] == 'Z'
-        self.assertEqual(purchase.processor_response['avs_result_code'], 'X')
+        self.assertEqual(purchase.processor_response['avs_result_code'], 'Z')
 
     def test_authorize_should_return_processor_avs_result_code_N(self):
         token = test_helper.default_payment_method({'address_1':'123 Main St',

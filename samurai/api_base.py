@@ -40,6 +40,7 @@ class ApiBase(object):
             if parsed_res['error'].get('messages') and parsed_res['error']['messages'].get('message'):
                 message = parsed_res['error']['messages']['message']
                 self.error_messages = message if isinstance(message, list) else [message]
+                self.messages = message if isinstance(message, list) else [message]
         return error
 
     def _check_semantic_errors(self, parsed_res):
@@ -64,8 +65,10 @@ class ApiBase(object):
         """
         for m in self.error_messages:
             if isinstance(m, dict) and m.get('context'):
-                description =  Message.readable_description(m['subclass'], m['context'],
-                                                            m['key'])
+                if m.get('text'):
+                    description = m.get('text')
+                else:
+                    description =  Message.readable_description(m['subclass'], m['context'], m['key'])
                 if description not in self.errors[m['context']]:
                     self.errors[m['context']].append(description)
 

@@ -17,6 +17,7 @@ class TestXmlutils(unittest.TestCase):
         <messages>
             <message class="error" context="input.cvv" key="too_long" />
             <message class="error" context="input.card_number" key="failed_checksum" />
+            <message class="error" context="system.general" key="fubar">Error description</message>
         </messages>
         <last_four_digits>1111</last_four_digits>
         <card_type>visa</card_type>
@@ -48,17 +49,19 @@ class TestXmlutils(unittest.TestCase):
         'is_sensitive_data_valid': False,
         'last_four_digits': '1111',
         'last_name': 'Smith',
-        'messages': {'message': [{'class': 'error',
-            'context': 'input.cvv',
-            'key': 'too_long'},
-            {'class': 'error',
-            'context': 'input.card_number',
-            'key': 'failed_checksum'}]},
+        'messages': {
+            'message': [
+                {'class': 'error', 'context': 'input.cvv', 'key': 'too_long'},
+                {'class': 'error', 'context': 'input.card_number', 'key': 'failed_checksum'},
+                {'class': 'error', 'context': 'system.general', 'key': 'fubar', 'text': 'Error description'}
+            ]
+        },
         'payment_method_token': 'QhLaMNNpvHwfnFbHbUYhNxadx4C',
         'state': {'nil': 'true'},
         'updated_at': datetime.datetime(2011, 4, 22, 17, 57, 30),
         'zip': {'nil': 'true'}}}
 
+        config.logger.debug(xml_to_dict(test))
         self.assertEqual(expected, xml_to_dict(test))
 
     def test_dict_to_xml(self):

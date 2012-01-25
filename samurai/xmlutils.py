@@ -6,6 +6,8 @@
 """
 import datetime
 
+elems_preserving_attributes = [ 'message' ]
+
 def xml_to_dict(root_or_str):
     """
     Converts `root_or_str` which can be parsed xml or a xml string to dict.
@@ -98,7 +100,10 @@ def _from_xml(el):
     else:
         attribs = el.items()
         # An element with no subelements but text.
-        if el.text:
+        if el.tag in elems_preserving_attributes:
+            val = dict(attribs)
+            if el.text: val['text'] = el.text
+        elif el.text:
             val = _val_and_maybe_convert(el)
         # An element with attributes.
         elif attribs:

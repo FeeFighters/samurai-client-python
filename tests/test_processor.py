@@ -73,13 +73,31 @@ class TestProcessor(unittest.TestCase):
             'expiry_year' : '2014',
           }
         token = test_helper.default_payment_method(data).payment_method_token
-        purchase = Processor.purchase(token,
-                                      1.00,
-                                      billing_reference=self.rand)
+        purchase = Processor.purchase(token, 1.00)
         self.assertFalse(purchase.success)
         self.assertIn({'context': 'input.card_number', 'key': 'not_numeric', 'subclass': 'error'}, purchase.error_messages)
         self.assertIn({'context': 'input.card_number', 'key': 'too_short', 'subclass': 'error'}, purchase.error_messages)
         self.assertIn({'context': 'input.card_number', 'key': 'is_blank', 'subclass': 'error'}, purchase.error_messages)
+
+    def test_purchase_should_return_invalid_sandbox_card_error(self):
+        data = {
+            'custom' : '',
+            'first_name' : '',
+            'last_name' : '',
+            'address_1' : '',
+            'address_2' : '',
+            'city' : '',
+            'state' : '',
+            'zip' : '10101',
+            'card_number' : '5256486068715680',
+            'cvv' : '111',
+            'expiry_month' : '05',
+            'expiry_year' : '2014',
+          }
+        token = test_helper.default_payment_method(data).payment_method_token
+        purchase = Processor.purchase(token, 1.00)
+        self.assertFalse(purchase.success)
+        self.assertIn({'context': 'system.general', 'key': 'default', 'subclass': 'error'}, purchase.error_messages)
 
     def test_cvv_should_return_processor_cvv_result_code_M(self):
         token = test_helper.default_payment_method({'cvv':'111'}).payment_method_token

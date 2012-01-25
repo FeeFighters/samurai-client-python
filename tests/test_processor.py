@@ -96,7 +96,6 @@ class TestProcessor(unittest.TestCase):
           }
         token = test_helper.default_payment_method(data).payment_method_token
         purchase = Processor.purchase(token, 1.00)
-        self.assertFalse(purchase.success)
         self.assertIn({'context': 'system.general', 'key': 'default', 'subclass': 'error'}, purchase.error_messages)
 
     def test_cvv_should_return_processor_cvv_result_code_M(self):

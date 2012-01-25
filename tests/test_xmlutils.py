@@ -61,7 +61,6 @@ class TestXmlutils(unittest.TestCase):
         'updated_at': datetime.datetime(2011, 4, 22, 17, 57, 30),
         'zip': {'nil': 'true'}}}
 
-        config.logger.debug(xml_to_dict(test))
         self.assertEqual(expected, xml_to_dict(test))
 
     def test_dict_to_xml(self):

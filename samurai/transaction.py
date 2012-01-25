@@ -183,6 +183,12 @@ class Transaction(ApiBase):
         """
         return self._transact(self.void_url)
 
+    def to_json(self):
+        from simplejson import dumps
+        def encode_it(obj):
+            return obj.__dict__
+        return dumps(self, default=encode_it)
+
     def _transact(self, endpoint, amount=None):
         """
         Meant to be used internally and shouldn't be called from outside.

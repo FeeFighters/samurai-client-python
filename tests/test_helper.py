@@ -15,7 +15,6 @@ config.debug = True
 
 def default_payment_method(options={}):
   data = {
-      'card_number': '4111111111111111',
       'sandbox' : True,
       'redirect_url' : 'http://test.host',
       'merchant_key' : config.merchant_key,

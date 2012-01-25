@@ -57,6 +57,30 @@ class TestProcessor(unittest.TestCase):
         self.assertIn(err, purchase.error_messages)
         self.assertIn('The transaction amount was invalid.', purchase.errors['input.amount'])
 
+    def test_purchase_should_return_payment_method_errors_on_blank_pm(self):
+        data = {
+            'custom' : '',
+            'first_name' : '',
+            'last_name' : '',
+            'address_1' : '',
+            'address_2' : '',
+            'city' : '',
+            'state' : '',
+            'zip' : '',
+            'card_number' : '',
+            'cvv' : '',
+            'expiry_month' : '05',
+            'expiry_year' : '2014',
+          }
+        token = test_helper.default_payment_method(data).payment_method_token
+        purchase = Processor.purchase(token,
+                                      1.00,
+                                      billing_reference=self.rand)
+        self.assertFalse(purchase.success)
+        self.assertIn({'context': 'input.card_number', 'key': 'not_numeric', 'subclass': 'error'}, purchase.error_messages)
+        self.assertIn({'context': 'input.card_number', 'key': 'too_short', 'subclass': 'error'}, purchase.error_messages)
+        self.assertIn({'context': 'input.card_number', 'key': 'is_blank', 'subclass': 'error'}, purchase.error_messages)
+
     def test_cvv_should_return_processor_cvv_result_code_M(self):
         token = test_helper.default_payment_method({'cvv':'111'}).payment_method_token
         purchase = Processor.purchase(token,

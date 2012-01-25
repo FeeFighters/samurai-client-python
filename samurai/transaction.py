@@ -74,13 +74,13 @@ class Transaction(ApiBase):
         req = Request(cls.find_url % reference_id)
         return cls(fetch_url(req))
 
-    def _message_block(self, parsed_res):
+    def _message_block(self, parsed_res, key='processor_response'):
         """
         Returns the message block from the `parsed_res`
         """
         return (parsed_res.get(self.top_xml_key) and
-                parsed_res[self.top_xml_key].get('processor_response') and
-                parsed_res[self.top_xml_key]['processor_response'].get('messages'))
+                parsed_res[self.top_xml_key].get(key) and
+                parsed_res[self.top_xml_key][key].get('messages'))
 
     def _check_semantic_errors(self, parsed_res):
         """
@@ -89,13 +89,19 @@ class Transaction(ApiBase):
         Else delegates to superclass.
         """
         if parsed_res.get(self.top_xml_key):
-            if not parsed_res[self.top_xml_key]['processor_response']['success']:
+            if parsed_res[self.top_xml_key].get('processor_response'):
                 message_block = self._message_block(parsed_res)
                 if message_block and message_block.get('message'):
                     message = message_block['message']
                     self.error_messages = message if isinstance(message, list) else [message]
                     self.error_messages = filter(lambda m: m['subclass']=='error', self.error_messages)
-                return True
+            if parsed_res[self.top_xml_key].get('payment_method'):
+                message_block = self._message_block(parsed_res, 'payment_method')
+                if message_block and message_block.get('message'):
+                    message = message_block['message']
+                    self.error_messages = message if isinstance(message, list) else [message]
+                    self.error_messages = filter(lambda m: m['subclass']=='error', self.error_messages)
+            return True
         return super(Transaction, self)._check_semantic_errors(parsed_res)
 
     def is_success(self):

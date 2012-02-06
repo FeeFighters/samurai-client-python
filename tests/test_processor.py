@@ -96,7 +96,7 @@ class TestProcessor(unittest.TestCase):
           }
         token = test_helper.default_payment_method(data).payment_method_token
         purchase = Processor.purchase(token, 1.00)
-        self.assertIn({'context': 'system.general', 'key': 'default', 'subclass': 'error'}, purchase.error_messages)
+        self.assertIn({'context': 'system.general', 'key': 'default', 'subclass': 'error', 'text': 'Invalid Sandbox Card Number. For more information, see: https://samurai.feefighters.com/developers/sandbox'}, purchase.error_messages)
 
     def test_cvv_should_return_processor_cvv_result_code_M(self):
         token = test_helper.default_payment_method({'cvv':'111'}).payment_method_token
